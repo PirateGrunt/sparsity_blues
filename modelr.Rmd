@@ -1,0 +1,182 @@
+---
+title: Working with modelr
+---
+
+```{r}
+library(tidyverse)
+library(modelr)
+library(rpart)
+library(ROCR)
+library(randomForest)
+```
+
+```{r}
+load('data/nfl_data.rda')
+```
+
+# Convert categories to factors
+
+```{r}
+convert_cols <- c("CrimeCategory", "PositionType", "DayOfWeek", "TeamAbbr", "Encounter")
+
+for (i in seq_along(convert_cols)){
+  dfPlayers[[convert_cols[i]]] <- as.factor(dfPlayers[[convert_cols[i]]])
+}
+```
+
+# Split data
+
+```{r}
+set.seed(1234)
+data_split <- dfPlayers %>% 
+  resample_partition(c(train = 0.7, test = 0.15, validate = 0.15))
+dfTrain <- dfPlayers[as.integer(data_split$train), ]
+dfTest <- dfPlayers[as.integer(data_split$test), ]
+dfValidate <- dfPlayers[as.integer(data_split$validate), ]
+```
+
+# Train a couple models
+
+```{r}
+MakeFormula <- function(target, predict_cols){
+  str_formula <- paste0(target, '~', paste0(predict_cols, collapse = '+'))
+  as.formula(str_formula, env = .GlobalEnv)
+}
+```
+
+```{r}
+formula_1 <- MakeFormula("MultiArrest", "CrimeCategory")
+fit1 <- data_split$train %>% 
+  as.data.frame() %>% 
+  rpart(
+    formula = formula_1
+  )
+fit1
+
+formula_1_5 <- MakeFormula("MultiArrest", one_hot_names$CrimeCategory)
+fit1_5 <- dfTrain %>% 
+  rpart(formula = formula_1_5)
+fit1_5
+
+formula_2 <- MakeFormula("MultiArrest", c("CrimeCategory", "PositionType"))
+fit2 <- data_split$train %>% 
+  as.data.frame() %>% 
+  rpart(
+    formula = formula_2
+  )
+fit2
+
+formula_3 <- MakeFormula("MultiArrest", "CrimeCategory + PositionType + DayOfWeek + TeamAbbr + Encounter")
+fit3 <- data_split$train %>% 
+  as.data.frame() %>% 
+  rpart(
+    formula = formula_3
+  )
+fit3
+```
+
+# Make some predictions on the test sets
+
+```{r}
+dfTest <- dfTest %>% 
+  add_predictions(fit1, var="Pred1") %>% 
+  add_predictions(fit1_5, var="Pred1_5") %>% 
+  add_predictions(fit2, var="Pred2") %>% 
+  add_predictions(fit3, var="Pred3")
+```
+
+# Evaluate our models
+
+```{r}
+GetAUC <- function(predict_vals, actual_val){
+  perf <- performance(prediction(predict_vals, actual_val), 'auc')
+  as.numeric(perf@y.values)
+}
+
+GetAUC(dfTest$Pred1, dfTest$MultiArrest)
+GetAUC(dfTest$Pred1_5, dfTest$MultiArrest)
+GetAUC(dfTest$Pred2, dfTest$MultiArrest)
+GetAUC(dfTest$Pred3, dfTest$MultiArrest)
+```
+
+# Now let's try some random forests
+
+```{r}
+set.seed(1234)
+fit_forest_1 <- randomForest(
+    formula_1
+  , data = dfTrain
+)
+
+fit_forest_1_5 <- randomForest(
+    formula_1_5
+  , data = dfTrain
+)
+
+fit_forest_2 <- randomForest(
+    formula_2
+  , data = dfTrain
+)
+fit_forest_3 <- randomForest(
+    formula_3
+  , data = dfTrain
+)
+
+dfTest <- dfTest %>% 
+  add_predictions(fit_forest_1, var="PredForest1") %>% 
+  add_predictions(fit_forest_1_5, var="PredForest1_5") %>% 
+  add_predictions(fit_forest_2, var="PredForest2") %>% 
+  add_predictions(fit_forest_3, var="PredForest3")
+```
+
+```{r}
+GetAUC(dfTest$PredForest1, dfTest$MultiArrest)
+GetAUC(dfTest$PredForest1_5, dfTest$MultiArrest)
+GetAUC(dfTest$PredForest2, dfTest$MultiArrest)
+GetAUC(dfTest$PredForest3, dfTest$MultiArrest)
+```
+
+# Naive Bayes
+
+```{r}
+library(e1071)
+
+nb_1 <- naiveBayes(formula_1, data=dfTrain)
+nb_1_5 <- naiveBayes(formula_1_5, data=dfTrain)
+nb_2 <- naiveBayes(formula_2, data=dfTrain)
+nb_3 <- naiveBayes(formula_3, data=dfTrain)
+
+dfTest$NB_1 <- predict(nb_1, newdata=dfTest, type='raw')[, 'TRUE']
+dfTest$NB_1_5 <- predict(nb_1_5, newdata=dfTest, type='raw')[, 'TRUE']
+dfTest$NB_2 <- predict(nb_2, newdata=dfTest, type='raw')[, 'TRUE']
+dfTest$NB_3 <- predict(nb_3, newdata=dfTest, type='raw')[, 'TRUE']
+
+GetAUC(dfTest$NB_1, dfTest$MultiArrest)
+GetAUC(dfTest$NB_1_5, dfTest$MultiArrest)
+GetAUC(dfTest$NB_2, dfTest$MultiArrest)
+GetAUC(dfTest$NB_3, dfTest$MultiArrest)
+```
+
+# Validate
+
+```{r}
+dfValidate <- dfValidate %>% 
+  add_predictions(fit_forest_1, var="PredForest1") %>% 
+  add_predictions(fit_forest_2, var="PredForest2") %>% 
+  add_predictions(fit_forest_3, var="PredForest3")
+
+dfValidate$NB_1 <- predict(nb_1, newdata = dfValidate, type='raw')[, 'TRUE']
+dfValidate$NB_2 <- predict(nb_2, newdata = dfValidate, type='raw')[, 'TRUE']
+dfValidate$NB_3 <- predict(nb_3, newdata = dfValidate, type='raw')[, 'TRUE']
+```
+
+```{r }
+GetAUC(dfValidate$PredForest1, dfValidate$MultiArrest)
+GetAUC(dfValidate$PredForest2, dfValidate$MultiArrest)
+GetAUC(dfValidate$PredForest3, dfValidate$MultiArrest)
+
+GetAUC(dfValidate$NB_1, dfValidate$MultiArrest)
+GetAUC(dfValidate$NB_2, dfValidate$MultiArrest)
+GetAUC(dfValidate$NB_3, dfValidate$MultiArrest)
+```
+

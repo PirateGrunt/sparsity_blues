@@ -1,0 +1,119 @@
+---
+title: "Untitled"
+author: "Brian A. Fannin"
+date: "October 19, 2017"
+output: revealjs::revealjs_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r}
+library(dplyr)
+library(ggplot2)
+```
+
+# What is the likelihood of a second accident?
+
+* Bailey/Simon
+* Naive Bayes
+* Decision tree
+
+# The data
+
+The data is about NFL felonies
+
+Categorical data:
+
+* Position -> offense/defense/special teams
+* Team -> AFC/NFC
+* 
+
+# Example - NFL arrests
+
+## Before anyone gets carried away...
+
+From nflarrests.com:
+
+> Keep in mind there are 1700 NFL Players and their arrest rates are lower than the USA arrest rate.
+
+Also: arrest != conviction
+
+## 
+
+* Rate of 1st arrest requires player statistics for each season, requires a second source.
+* I'm lazy. Let's check rate of second arrest.
+
+## 
+
+```{r}
+load('data/nfl_data.rda')
+num_players <- nrow(dfPlayers)
+num_arrests <- nrow(dfArrests)
+num_multi_arrest <- sum(dfPlayers$MultiArrest)
+```
+
+* Number of players who've been arrested: `r num_players`
+* Number of arrests: `r num_arrests`
+* Number of players w/more than one arrest: `r num_multi_arrest`
+
+##
+
+```{r}
+ggplot(filter(dfPlayers, NumArrests > 1), aes(NumArrests, fill=ArrestSeasonState)) + 
+  geom_histogram(binwidth = 1) + 
+  scale_x_continuous(breaks = seq.int(10))
+```
+
+## 
+
+So there is a small probability of having more than one arrest. Compare this to Bailey/Simon probability of second accident.
+
+```{r}
+
+```
+
+# A decision tree
+
+## Characteristics of a decision tree
+
+* Divides a sample into categories
+* The 'prediction' is a function of some value within each category
+* Membership is assessed by computing some criteria. If a split improves the criteria, then it is made. Forward only, i.e. 'greedy'.
+* Number of levels and other criteria control the size and shape of the tree
+* In this case, output is discrete and binary. Continuous response will produce a finite set of predictions.
+
+## First attempt
+
+Decision trees
+
+## About the data
+
+* Must ensure that character variables are factors
+* Create one hot encoded columns
+* Weirdly, one hot encoding doesn't appear to work with `rpart()`
+
+## Decision trees conclusion
+
+* Results on the test set are barely better than chance and, in one model, actually worse
+* Model will memorize the data
+
+## Random forests
+
+* Boosts
+
+## Naive Bayes
+
+* Often used in text processing
+* Great for a sparse matrix
+
+# Conclusion
+
+## Thank you!
+
+## References
+
+# Flotsam
+
+https://www.zillow.com/research/data/

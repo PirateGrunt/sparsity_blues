@@ -1,0 +1,72 @@
+---
+title: EDA
+---
+
+```{r}
+library(tidyverse)
+```
+
+```{r}
+load('data/nfl_data.rda')
+```
+
+```{r}
+ShowTwoPlots <- function(){
+  
+}
+```
+
+
+```{r}
+ggplot(dfPlayers, aes(CrimeCategory, fill=MultiArrest)) + 
+  geom_bar(position = 'fill')
+
+ggplot(dfPlayers, aes(CrimeCategory, fill=MultiArrest)) + 
+  geom_bar()
+```
+
+```{r}
+ggplot(dfPlayers, aes(DayOfWeek, fill=MultiArrest)) + 
+  geom_bar(position = 'fill')
+
+ggplot(dfPlayers, aes(DayOfWeek, fill=MultiArrest)) + 
+  geom_bar()
+```
+
+```{r}
+ggplot(dfPlayers, aes(DayOfWeek, fill=MultiArrest)) + 
+  geom_bar(position = 'fill')
+
+ggplot(dfPlayers, aes(DayOfWeek, fill=MultiArrest)) + 
+  geom_bar()
+```
+
+```{r}
+ggplot(dfPlayers, aes(TeamCity, fill=MultiArrest)) + 
+  geom_bar(position = 'fill') +
+  theme(axis.text.x = element_text(angle = 45))
+
+ggplot(dfPlayers, aes(TeamCity, fill=MultiArrest)) + 
+  geom_bar() + 
+  theme(axis.text.x = element_text(angle = 45))
+```
+
+```{r}
+ggplot(dfPlayers, aes(Position, fill=MultiArrest)) + 
+  geom_bar(position = 'fill') +
+  theme(axis.text.x = element_text(angle = 45))
+
+ggplot(dfPlayers, aes(Position, fill=MultiArrest)) + 
+  geom_bar() + 
+  theme(axis.text.x = element_text(angle = 45))
+```
+
+```{r}
+ggplot(dfPlayers, aes(PositionType, fill=MultiArrest)) + 
+  geom_bar(position = 'fill') +
+  theme(axis.text.x = element_text(angle = 45))
+
+ggplot(dfPlayers, aes(PositionType, fill=MultiArrest)) + 
+  geom_bar() + 
+  theme(axis.text.x = element_text(angle = 45))
+```
