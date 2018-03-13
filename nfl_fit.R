@@ -63,3 +63,10 @@ plot(roc_test)
 abline(a=0, b= 1)
 perf <- performance(prediction(dfTest$Pred2, dfTest$MultiArrest), 'auc')
 as.numeric(perf@y.values)
+
+#------------------------
+# MCA
+
+library(caret)
+flds <- createFolds(y, k = 10, list = TRUE, returnTrain = FALSE)
+names(flds)[1] <- "train"

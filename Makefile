@@ -1,10 +1,14 @@
 all:pres.html
 
-pres.html:pres.Rmd data/nfl_data.rda
-	Rscript -e "rmarkdown::render('$<')"
+data_files = nfl_data
+data_rda = $(addprefix data/, $(addsuffix .rda, $(data_files)))
 
-data/nfl_data.rda:nfl_data.R
-	Rscript -e "source('nfl_data.R')"
+pres.html:pres.Rmd ./css/revealOpts.css data $(data_rda)
+	Rscript -e "rmarkdown::render('$<')"
+	Rscript -e "knitr::purl('$<', documentation = 0)"
+
+data/%.rda:%.R
+	Rscript -e "source('$<')"
 
 clean:
 	rm -rf data/*.rda

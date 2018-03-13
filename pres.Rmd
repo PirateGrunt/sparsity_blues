@@ -1,36 +1,35 @@
 ---
-title: "Untitled"
+title: Sparsity Blues
 author: "Brian A. Fannin"
-date: "October 19, 2017"
-output: revealjs::revealjs_presentation
+date: March 21, 2018
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(
+    echo = FALSE
+  , warning = FALSE
+  , message = FALSE
+)
+
+library(tidyverse)
+library(FactoMineR)
 ```
 
-```{r}
-library(dplyr)
-library(ggplot2)
+# Origins
+
+## Origins
+
+* I gave a talk last year about APIs.
+* As an afterthought, I fit a model. 
+* The fits were not satisfying because the data was largely categorical.
+
+## The data
+
+```{r }
+knitr::include_graphics('images/nfl_arrest.png')
 ```
 
-# What is the likelihood of a second accident?
-
-* Bailey/Simon
-* Naive Bayes
-* Decision tree
-
-# The data
-
-The data is about NFL felonies
-
-Categorical data:
-
-* Position -> offense/defense/special teams
-* Team -> AFC/NFC
-* 
-
-# Example - NFL arrests
+nflarrest.com
 
 ## Before anyone gets carried away...
 
@@ -40,38 +39,139 @@ From nflarrests.com:
 
 Also: arrest != conviction
 
-## 
+## What I tried to measure
 
 * Rate of 1st arrest requires player statistics for each season, requires a second source.
 * I'm lazy. Let's check rate of second arrest.
+* This is analogous to Bailey/Simon, credibility of single policy
+
+## There are only 2 kinds of data
+
+* Continuous
+* Categorical
+    * Ordinal
+    * Unordered
+
+## Categorical outcome
+
+* Logistic regression
+* Support vector machine
+* Tree methods
+
+##
+
+> What if we had only categorical predictors?
+
+# Categorical data in linear models
+
+## How they behave
+
+Categorical data acts to augment the linear structure.
+
+* Different intercepts
+* Different slopes
+
+## Example of those things
+
+## Penalty
+
+* Grouped data is looped data
+* Handle this with credibility/hierarchical models
+
+
+# Back to our data
+
+## 
+
+Categorical data:
+
+* Position -> offense/defense/special teams
+* Team -> AFC/NFC
+* City
+
+Continuous:
+
+* Player stats
+* Player physical characteristics
+* Player salary
 
 ## 
 
 ```{r}
 load('data/nfl_data.rda')
-num_players <- nrow(dfPlayers)
-num_arrests <- nrow(dfArrests)
-num_multi_arrest <- sum(dfPlayers$MultiArrest)
+num_players <- nrow(tbl_players)
+num_arrests <- nrow(tbl_arrests)
+num_multi_arrest <- sum(tbl_players$MultiArrest)
 ```
 
 * Number of players who've been arrested: `r num_players`
 * Number of arrests: `r num_arrests`
 * Number of players w/more than one arrest: `r num_multi_arrest`
 
+So there is a small probability of having more than one arrest. Compare this to Bailey/Simon probability of second accident.
+
 ##
 
 ```{r}
-ggplot(filter(dfPlayers, NumArrests > 1), aes(NumArrests, fill=ArrestSeasonState)) + 
-  geom_histogram(binwidth = 1) + 
-  scale_x_continuous(breaks = seq.int(10))
+summarize_category <- function(tbl, category){
+  tbl <- tbl[, c('MultiArrestNum', category)]
+  names(tbl)[2] <- 'Category'
+  
+  tbl <- tbl %>%
+    group_by(Category) %>% 
+    summarize(
+      MultiArrest = sum(MultiArrestNum, na.rm = TRUE)
+      , N = n()
+      ) %>%
+    mutate(MultiArrestPct = MultiArrest / N)
+  
+  tbl
+}
+
+mojo <- summarize_category(tbl_players, 'ArrestSeasonState')
+
+tbl_players %>% 
+  select()
 ```
 
-## 
+# How we'll model
 
-So there is a small probability of having more than one arrest. Compare this to Bailey/Simon probability of second accident.
+## Our performance metric
+
+AUC = Area Under the Curve
+
+## Define ROC
+
+## Define AUC
+
+## AUC Code
 
 ```{r}
+library(ROCR)
+get_auc <- function(predict_val, actual_val){
+  perf <- performance(prediction(predict_val, actual_val), 'auc')
+  as.numeric(perf@y.values)
+}
 
+
+```
+
+## N-fold cross validation
+
+```{r}
+set.seed(1234)
+library(modelr)
+tbl_folds <- crossv_kfold(tbl_players, k = 10)
+
+fit <- randomForest::randomForest(
+    formula = MultiArrest ~ Season + ArrestSeasonState + DayOfWeek
+  , data = as.data.frame(tbl_folds$train[[1]])
+  , 
+)
+summary(fit)
+fit
+library(randomForest)
+varImpPlot(fit)
 ```
 
 # A decision tree
@@ -79,20 +179,109 @@ So there is a small probability of having more than one arrest. Compare this to 
 ## Characteristics of a decision tree
 
 * Divides a sample into categories
-* The 'prediction' is a function of some value within each category
+* The 'prediction' is a function of some value within each category.
 * Membership is assessed by computing some criteria. If a split improves the criteria, then it is made. Forward only, i.e. 'greedy'.
 * Number of levels and other criteria control the size and shape of the tree
 * In this case, output is discrete and binary. Continuous response will produce a finite set of predictions.
 
-## First attempt
+##
 
-Decision trees
+```{r}
+tbl_tree <- tibble(
+    x = runif(1e3, 0,10)
+  , e = rnorm(1e3)
+) %>% 
+  mutate(
+    y = 1.5 + 2 * x + e
+  )
+
+tbl_tree %>% 
+  ggplot(aes(x, y)) + 
+  geom_point()
+```
+
+## Fit a decision tree
+
+```{r}
+fit_tree <- tree::tree(formula = y ~ x, data = tbl_tree)
+
+tbl_tree <- tbl_tree %>% 
+  mutate(prediction = predict(fit_tree))
+
+tbl_tree %>% 
+  ggplot(aes(x)) + 
+  geom_point(aes(y = y), alpha = 0.5) + 
+  geom_point(aes(y = prediction), color = 'red')
+```
+
+## Example node
+
+```{r}
+tbl_mojo <- tibble(
+    a = c('red', 'red', 'red', 'blue', 'blue')
+  , b = c('black', 'white', 'black', 'white', 'black')
+  , output = c(1, 1, 0, 0, 0)
+)
+
+entropy <- function(y) {
+  tbl <- tibble(y)
+  tbl <- tbl %>% 
+    group_by(y) %>% 
+    summarise(prob = n()) %>% 
+    mutate(
+        prob = prob / sum(prob)
+      , ent = -prob * log(prob))
+  
+  tbl$ent %>% sum()
+}
+
+entropy(tbl_mojo$output)
+```
+
+##
+
+```{r}
+entropy_post <- function(tbl) {
+  tbl %>% 
+  summarise(
+      ent = entropy(output)
+    , group_pct = n()
+  ) %>% 
+  mutate(
+    group_pct = group_pct / sum(group_pct)
+  ) %>% 
+    ungroup() %>% 
+  summarise(
+    mojo = sum(ent * group_pct)
+  ) %>% 
+    pull(mojo)
+  
+}
+
+tbl_mojo %>% 
+  group_by(a) %>% 
+  entropy_post()
+
+tbl_mojo %>% 
+  group_by(b) %>% 
+  entropy_post()
+```
+
+
+```{r}
+entropy_post <- function(x, y) {
+  tbl <- tibble(x, y)
+  tbl <- tbl %>% 
+    group_by(x) %>%
+    summarise(prob = n() / nrow(tbl)) %>% 
+    mutate(ent = -prob * log(prob))
+  tbl$ent %>% sum()
+}
+```
 
 ## About the data
 
 * Must ensure that character variables are factors
-* Create one hot encoded columns
-* Weirdly, one hot encoding doesn't appear to work with `rpart()`
 
 ## Decision trees conclusion
 
@@ -103,17 +292,76 @@ Decision trees
 
 * Boosts
 
-## Naive Bayes
+# Naive Bayes
+
+## Bayes
 
 * Often used in text processing
 * Great for a sparse matrix
+
+## What makes it "navie"?
+
+# Multiple Correspondence Analysis
+
+## What is MCA?
+
+* PCA, but for categories
+* CA, 
+* FactoMineR
+
+## Complete disjunctive table
+
+As entered
+
+```{r }
+tbl_toy_mca <- tibble(
+    id = 1:4
+  , metro = c('urban', 'urban', 'rural', 'urban') %>% as_factor()
+  , region = c('north', 'south', 'east', 'north') %>% as_factor()
+)
+tbl_toy_mca %>% 
+  knitr::kable()
+```
+
+CDT, or "one-hot encoding"
+
+```{r results='asis'}
+tbl_toy_mca_one_hot <- tbl_toy_mca %>% 
+  gather(category, value, -id) %>% 
+  unite(cdt, -id) %>%
+  mutate(count = 1L) %>% 
+  tidyr::spread(cdt, count, fill = 0L)
+
+tbl_toy_mca_one_hot %>% knitr::kable()
+```
+
+## Two categories = Five dimensions
+
+```{r}
+tbl_toy_mca_one_hot %>% knitr::kable()
+```
+
+## Visualize in the reduced dimensions
+
+
+
+# Reduced categorical dimension
+
+## How'd we do?
+
+* So, results are not awesome.
+* Neither is credibility
+* Bias/variance tradeoff
 
 # Conclusion
 
 ## Thank you!
 
+## Q&A
+
 ## References
 
-# Flotsam
-
-https://www.zillow.com/research/data/
+* Mosaic plot
+* http://www.gastonsanchez.com/visually-enforced/how-to/2012/10/13/MCA-in-R/
+* http://rpubs.com/dgrtwo/cv-modelr
+* https://drsimonj.svbtle.com/k-fold-cross-validation-with-modelr-and-broom

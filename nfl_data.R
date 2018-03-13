@@ -4,10 +4,10 @@ library(jsonlite)
 library(caret)
 
 team_search_url <- "http://nflarrest.com/api/v1/team/search/"
-team_search_url <- modify_url(team_search_url, query=list(term="s"))
+team_search_url <- modify_url(team_search_url, query = list(term = "s"))
 response <- GET(team_search_url)
 the_content <- content(response, "text", encoding = "UTF-8")
-dfTeam <- fromJSON(the_content, simplifyDataFrame =  TRUE)
+tbl_teams <- fromJSON(the_content, simplifyDataFrame =  TRUE)
 
 GetTeamPlayer <- function(team){
   team_player_url <- "http://nflarrest.com/api/v1/team/topPlayers/"
@@ -18,7 +18,7 @@ GetTeamPlayer <- function(team){
   df
 }
 
-players <- lapply(dfTeam$team_code, function(x){
+players <- lapply(tbl_teams$team_code, function(x){
   df <- GetTeamPlayer(x)
   players <- df$Name
 })
@@ -45,9 +45,9 @@ lstArrests <- lapply(players, function(x){
 })
 
 lstArrests <- lstArrests[!is.na(lstArrests)]
-dfArrests <- do.call(rbind, lstArrests)
+tbl_arrests <- do.call(rbind, lstArrests)
 
-dfArrests <- dfArrests %>%
+tbl_arrests <- tbl_arrests %>%
   select(
       -Crime_category_color
     , -Team_hex_alt_color
@@ -79,8 +79,8 @@ dfArrests <- dfArrests %>%
 
 MungeVals <- function(x){
   x %>%
-    gsub(pattern=" / ", replacement = "_") %>%
-    gsub(pattern=" ", replacement = "_")
+    gsub(pattern = " / ", replacement = "_") %>%
+    gsub(pattern = " ", replacement = "_")
 }
 
 one_hot_vars <- c(
@@ -88,11 +88,11 @@ one_hot_vars <- c(
   , 'PositionType', 'DayOfWeek', 'Encounter'
   , 'ArrestSeasonState', 'TeamCity', 'CrimeCategory')
 
-for (i in seq_along(one_hot_vars)){
-  dfArrests[[one_hot_vars[i]]] <- MungeVals(dfArrests[[one_hot_vars[i]]])
+for (i in seq_along(one_hot_vars)) {
+  tbl_arrests[[one_hot_vars[i]]] <- MungeVals(tbl_arrests[[one_hot_vars[i]]])
 }
 
-dfPlayers <- dfArrests %>%
+tbl_players <- tbl_arrests %>%
   select(
       -Day_of_Week_int
     , -DaysSince
@@ -106,21 +106,22 @@ dfPlayers <- dfArrests %>%
   group_by(Name) %>%
   arrange(Name, ArrestDate) %>%
   slice(1) %>%
-  inner_join(summarise(group_by(dfArrests, Name), NumArrests = n())) %>%
-  mutate(MultiArrest = (NumArrests > 1))
+  inner_join(summarise(group_by(tbl_arrests, Name), NumArrests = n())) %>%
+  mutate(
+      MultiArrest = (NumArrests > 1)
+    , MultiArrestNum = ifelse(MultiArrest, 1, 0)) %>%
+  select(-reddit_group_id, -NumArrests)
 
 # Why do I have more players than arrest records?
-setdiff(players, dfPlayers$Name)
+setdiff(players, tbl_players$Name)
 # Because I can't find record for players who have an apostrophe in their name
 
 vars_formula <- paste0('~', paste0(one_hot_vars, collapse = '+')) %>%
   as.formula()
 
-dummyVars <- dfPlayers %>%
-  dummyVars(
-    formula = vars_formula
-    ) %>%
-  predict(newdata = dfPlayers) %>%
+dummyVars <- tbl_players %>%
+  dummyVars(formula = vars_formula) %>%
+  predict(newdata = tbl_players) %>%
   as.data.frame()
 
 one_hot_cols <- names(dummyVars)
@@ -128,14 +129,15 @@ ExtractVars <- function(prefix, vals){
   grep(prefix, vals, value = TRUE)
 }
 
-one_hot_names <- sapply(one_hot_vars, ExtractVars, vals=one_hot_cols)
+one_hot_names <- sapply(one_hot_vars, ExtractVars, vals = one_hot_cols)
 
-dfPlayers <- dplyr::bind_cols(dfPlayers, dummyVars)
+tbl_players_one_hot <- dplyr::bind_cols(tbl_players, dummyVars)
 
 save(
     file = "data/nfl_data.rda"
-  , dfArrests
-  , dfPlayers
-  , dfTeam
+  , tbl_arrests
+  , tbl_players
+  , tbl_teams
+  , tbl_players_one_hot
   , one_hot_cols
   , one_hot_names)

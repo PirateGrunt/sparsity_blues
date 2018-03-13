@@ -20,7 +20,7 @@ load('data/nfl_data.rda')
 convert_cols <- c("CrimeCategory", "PositionType", "DayOfWeek", "TeamAbbr", "Encounter")
 
 for (i in seq_along(convert_cols)){
-  dfPlayers[[convert_cols[i]]] <- as.factor(dfPlayers[[convert_cols[i]]])
+  tbl_players[[convert_cols[i]]] <- as.factor(tbl_players[[convert_cols[i]]])
 }
 ```
 
@@ -28,11 +28,11 @@ for (i in seq_along(convert_cols)){
 
 ```{r}
 set.seed(1234)
-data_split <- dfPlayers %>% 
+data_split <- tbl_players %>% 
   resample_partition(c(train = 0.7, test = 0.15, validate = 0.15))
-dfTrain <- dfPlayers[as.integer(data_split$train), ]
-dfTest <- dfPlayers[as.integer(data_split$test), ]
-dfValidate <- dfPlayers[as.integer(data_split$validate), ]
+dfTrain <- tbl_players[as.integer(data_split$train), ]
+dfTest <- tbl_players[as.integer(data_split$test), ]
+dfValidate <- tbl_players[as.integer(data_split$validate), ]
 ```
 
 # Train a couple models

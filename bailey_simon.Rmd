@@ -1,0 +1,49 @@
+---
+
+---
+
+```{r}
+library(tidyverse)
+```
+
+So, I never really grokked the Bailey/Simon paper. I mean, I sorta get it, but I could never really figure out what the big deal was. So, here's me trying to finally come to grips with it.
+
+So, the first thing that I'm looking at, I'm already stumped. Appendix I, looks at the following thought experiment: imagine I've got three groups of risks 100,000, 100,000 and 50,000 and they've got claim frequency Poisson distributed, with lambdas of .05, .1 and .2, respectively. Bailey/Simon calculate the number of risks who have t=0:3 years of no claims. At t=0, nobody has any claims, so that's just the size of each class. For t = 1, we calculate the probability of no claims. That's `dpois(0, .lambda)`.
+
+```{r}
+class_size <- c(100e3, 100e3, 50e3)
+lambda <- c(.05, .1, .2)
+(class_size * dpois(0, lambda)) %>% round()
+```
+
+The lower part of the table is a bit wacky. To complete the upper bit of the table, they use Poisson. However, to get the lower part of the table - that is, the number who will experience a claim in the subsequent period - they use the raw lambda. Why is this?
+
+```{r}
+claim_free <- (class_size * dpois(0, lambda)) %>% 
+  round()
+
+claim_free * (dpois(1, lambda))
+claim_free * (lambda)
+```
+
+What if we'd just taken lambda all the way through?
+
+```{r}
+claim_free_year_1 <- class_size * (1 - lambda)
+claims_year_2 <- sum(claim_free_year_1 * lambda)
+freq <- claims_year_2 / sum(claim_free_year_1)
+credibility <- 1 - freq / .1
+```
+
+Pause for a minute and note that the average frequency for the whole population is 0.1. If we assume that a claim costs 10k each time, then a fair premium is 1,000. So group A should pay 500 and group C should pay 2,000. But we're not doing that. Bailey and Simon determine credibility amounts for t=1:3. So what's the premium for me, if I've not had any claims in the past year?
+
+```{r}
+(class_size * (1 - dpois(0, lambda))) %>% round()
+```
+
+Here's the big thing and I think Appendix 1 may speak to it. In a Naive Bayes sense, the question is not: are you going to have an accident, given that you haven't had one. The question is: given that you've had an accident, what is the chance that you're in class A, B or C? There's a bit of algebraic whatnot in shifting between credibility and modifiers. Bottom line, we're trying to suss out whether you're in class A, the one with the lowest risk. (Is that true?)
+
+```{r}
+
+```
+

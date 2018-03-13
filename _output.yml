@@ -1,0 +1,6 @@
+revealjs::revealjs_presentation:
+  css: ./css/revealOpts.css
+  center: no
+  theme: solarized
+  self_contained: no
+  transition: slide

@@ -1,0 +1,40 @@
+---
+title: Bailey Simon 2
+---
+
+```{r}
+library(tidyverse)
+```
+
+We'll be looking at Bailey and Simon's first appendix. Here, we assume a universe of risks with three different classes, which we'll call A, B and C. Their populations are 100k, 100k and 50k, respectively with probability of a claim being .05, .1 and .2. If we assume that a claim costs 1,000, then the global risk premium is:
+
+```{r }
+claim_cost <- 1e3
+class_size <- c(100e3, 100e3, 50e3)
+lambda <- c(.05, .1, .2)
+mean_lambda <- sum(lambda * class_size) / sum(class_size)
+global_premium = claim_cost * mean_lambda
+class_premium <- claim_cost * lambda
+```
+
+So, we charge everybody 100, which means that class B is getting a fair deal, but no one else is. If we knew what class they were in, we could charge them appropriately. What are the chances that any risk will be in a particular class? That's just the relative frequency.
+
+```{r}
+class_probs <- class_size / sum(class_size)
+```
+
+```{r}
+sum(class_probs * class_premium)
+```
+
+So, let's say that we've got someone who has had an accident. What should we charge them? It should be 1,000 times whatever we think their claim frequency is.
+
+```{r}
+posterior_class_prob <- (lambda * class_probs) / mean_lambda
+
+posterior_prem <- claim_cost * sum(posterior_class_prob * lambda)
+
+cred <- (posterior_prem - global_premium) / (claim_cost - global_premium)
+```
+
+$$
