@@ -722,7 +722,7 @@ tbl_models %>%
 
 ## Assess all folds, all formulas, all models
 
-```{r}
+```{r eval=FALSE}
 tbl_models <- tbl_models %>%
   mutate(
       misclass_tree = map_dbl(formula, cross_validate, tbl_folds, tree::tree)
