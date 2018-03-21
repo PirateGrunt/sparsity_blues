@@ -26,14 +26,6 @@
   width:48%;
 }
 
-.reveal .slide-background.present {
-    background-image: url(../images/actex.jpg), url(../images/PIRATEGRUNT.jpg);
-    background-size: 300px, 175px;
-    background-repeat: no-repeat;
-    background-position: bottom left, bottom center;
-    transition: none;
-}
-
 .red {
   color: red;
 }

@@ -110,7 +110,14 @@ tbl_players <- tbl_arrests %>%
   mutate(
       MultiArrest = (NumArrests > 1)
     , MultiArrestNum = ifelse(MultiArrest, 1, 0)) %>%
-  select(-reddit_group_id, -NumArrests)
+  select(-reddit_group_id, -NumArrests) %>%
+  ungroup()
+
+tbl_players$MultiArrestFactor <- as.factor(tbl_players$MultiArrest)
+tbl_players$PositionType <- as.factor(tbl_players$PositionType)
+tbl_players$Season <- as.factor(tbl_players$Season)
+tbl_players$ArrestSeasonState <- as.factor(tbl_players$ArrestSeasonState)
+
 
 # Why do I have more players than arrest records?
 setdiff(players, tbl_players$Name)
