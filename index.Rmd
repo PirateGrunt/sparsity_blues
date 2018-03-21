@@ -34,7 +34,7 @@ library(tidyverse)
 
 ## The data
 
-```{r }
+```{r echo=FALSE, out.height = '600px'}
 load('./data/nfl_data.rda')
 knitr::include_graphics('images/nfl_arrest.png')
 ```
@@ -57,7 +57,7 @@ I tried to measure whether a player would get a second arrest.
 
 ## Just the basic facts
 
-```{r}
+```{r echo = FALSE}
 prob_multi_arrest <- sum(tbl_players$MultiArrest) / nrow(tbl_players)
 ```
 
@@ -98,7 +98,7 @@ And those are just the ones that might be in a rating manual.
 ## Continuous outcome
 
 <div class='left'>
-```{r}
+```{r echo=TRUE}
 sims <- 1e3
 tbl_linear <- tibble(
     x = runif(sims, 0, 10)
@@ -127,7 +127,7 @@ tbl_linear %>%
 ## Categorical outcome
 
 <div class='left'>
-```{r}
+```{r echo=TRUE}
 tbl_logistic <- tbl_linear %>% 
   mutate(
       e = rlogis(1e3)
@@ -148,10 +148,11 @@ tbl_logistic %>%
 
 ## Categorical predictors in a linear model
 
-```{r }
+```{r echo=TRUE}
+set.seed(1234)
 tbl_one_cat <- function(cat_label = 'a', sims = 1e3) {
-  slope <- runif(1, 0, 5)
-  intercept <- runif(1, 0, 10)
+  slope <- rnorm(1, 2, 2)
+  intercept <- rnorm(1, 0, 10)
   tibble(
     x = runif(sims, 0, 10)
   , e = rnorm(sims, sd = 5)
@@ -167,7 +168,6 @@ tbl_cat <- map_dfr(letters[1:5], tbl_one_cat)
 
 ## Different intercepts
 
-<div class='left'>
 ```{r echo=FALSE}
 fit_diff_slope <- lm(y ~ 0 + category + x, data = tbl_cat)
 plt <- tbl_cat %>% 
@@ -175,19 +175,11 @@ plt <- tbl_cat %>%
   ggplot(aes(x, y)) + 
   geom_point(alpha = 0.4) + 
   geom_line(aes(y = pred, color = category), size = 2)
-```
-</div>
-
-<div class'right'>
-```{r echo=FALSE}
 plt
 ```
 
-</div>
-
 ## Different slopes
 
-<div class='left'>
 ```{r echo=FALSE}
 fit_interaction <- lm(y ~ 1 + x:category, data = tbl_cat)
 plt <- tbl_cat %>% 
@@ -195,31 +187,18 @@ plt <- tbl_cat %>%
   ggplot(aes(x, y)) + 
   geom_point(alpha = 0.4) + 
   geom_line(aes(y = pred, color = category), size = 2)
-```
-</div>
-
-<div class='right'>
-```{r echo=FALSE}
 plt
 ```
-</div>
 
 ## Or both
 
-<div class='left'>
 ```{r echo=FALSE}
 plt <- tbl_cat %>% 
   ggplot(aes(x, y)) + 
   geom_point(alpha = 0.4) + 
   geom_smooth(method = lm, aes(color = category), size = 2)
-```
-</div>
-
-<div class='right'>
-```{r echo=FALSE}
 plt
 ```
-</div>
 
 ## Issues
 
@@ -231,8 +210,9 @@ plt
 
 ```{r echo=FALSE}
 fit_both <- lm(y ~ 0 + category + x:category, data = tbl_cat)
-fit_both %>% 
-  model.matrix() %>% 
+mojo <- fit_both %>% 
+  model.matrix()
+mojo[, 1:8]%>% 
   head(10) %>% 
   knitr::kable()
 ```
@@ -278,7 +258,11 @@ prior_y
 
 ## Two categories
 
+One:
+
 $$Pr(Y=y|X=x)=\frac{Pr(Y = y) * Pr(X=x|Y=y)}{Pr(X=x)}$$
+
+Two:
 
 $$Pr(Y=y|X=x, Z=z)$$
 
@@ -303,7 +287,8 @@ tbl_players %>%
   arrange(desc(MultiArrestPred)) %>% 
   select(MultiArrestPred) %>% 
   ggplot(aes(MultiArrestPred)) + 
-  geom_histogram(binwidth = .02)
+  geom_histogram(binwidth = .02) + 
+  geom_vline(xintercept = prob_multi_arrest, color = 'red')
 ```
 
 ## Naive Bayes
@@ -411,13 +396,6 @@ entropy_post <- function(tbl, out_col, split_col) {
 ## Which column works better on our toy data?
 
 <div class='left'>
-```{r echo=FALSE, results='asis'}
-tbl_toy %>% 
-  knitr::kable(format = 'html')
-```
-</div>
-
-<div class='right'>
 ```{r }
 entropy(tbl_toy$output)
 
@@ -426,6 +404,13 @@ tbl_toy %>%
 
 tbl_toy %>% 
   entropy_post(output, b)
+```
+</div>
+
+<div class='right'>
+```{r echo=FALSE, results='asis'}
+tbl_toy %>% 
+  knitr::kable(format = 'html')
 ```
 </div>
 
@@ -465,7 +450,7 @@ text(fit_tree, pretty = 0)
 ## Note
 
 1. Full disclosure: I used both `rpart` and `tree` for the fit. For reasons that I've not yet debugged, `rpart` gave me no nodes.
-2. A packages insistence on using factors may cause you to lose your mind.
+2. A package's insistence on using factors may cause you to lose your mind.
 
 ## Bagging/random forests
 
@@ -486,7 +471,7 @@ fit_forest <- randomForest(
 
 ## Variable importance
 
-```{r}
+```{r fig.height = 4}
 varImpPlot(fit_forest)
 ```
 
@@ -495,8 +480,13 @@ varImpPlot(fit_forest)
 ## What is MCA?
 
 * PCA, but for categories
-* CA, but multiple
-* FactoMineR
+* CA, but for multiple variables
+
+## Why MCA?
+
+* Dimensionality reduction
+* Could also consider (hierarchical) cluster analysis
+* Others?
 
 ## How does it work?
 
@@ -550,13 +540,6 @@ library(FactoMineR)
 fit_mca <- MCA(tbl_cats, graph = FALSE)
 ```
 
-
-## Why MCA?
-
-* Dimensionality reduction
-* Could also consider (hierarchical) cluster analysis
-* Others?
-
 ## Visualize in the reduced dimensions
 
 ```{r echo = FALSE}
@@ -568,13 +551,13 @@ tbl_players <- tbl_players %>%
   )
 
 tbl_players %>% 
-  ggplot(aes(dim_1, dim_2)) + 
+  ggplot(aes(dim_1, dim_2), size = 2, alpha = 0.7) + 
   geom_point(aes(color = PositionType))
 ```
 
 ## MCA: categorical -> continuous
 
-```{r}
+```{r echo=FALSE, results='asis'}
 fit_logistic_mca <- glm(
   MultiArrestNum ~ 0 + dim_1 + dim_2
   , data = tbl_players
@@ -599,7 +582,7 @@ Misclassification rate
 
 Other options:
 
-* True positive rate: 
+* True positive rate
 * False positive rate
 * Other confusion matrix metrics
 * Area under the curve (AUC): A number close to 1 is good
@@ -625,9 +608,13 @@ set.seed(1234)
 tbl_folds <- crossv_kfold(tbl_players, k = 10)
 ```
 
-## What's in tbl_folds?
+## `tbl_folds`
 
-[ignore if you're not into programming]
+```{r}
+tbl_folds %>% head()
+```
+
+## What's in tbl_folds?
 
 * Each row in the tibble holds:
   * a training `resample` object
@@ -680,6 +667,12 @@ misclasses <- cross_validate(
   , tbl_folds
   , tree::tree
 )
+
+misclasses <- cross_validate(
+    as.formula('MultiArrestFactor ~ PositionType + Season')
+  , tbl_folds
+  , naive_bayes
+)
 ```
 
 ## Make formulas
@@ -703,7 +696,11 @@ make_formula <- function(predictors, target, intercept = TRUE) {
 ```{r}
 the_formulas <- list(
       c('PositionType', 'Season')
-    , c('DayOfWeek', 'Encounter', 'PositionType')
+    , c('PositionType', 'Season', 'DayOfWeek')
+    , c('PositionType', 'Season', 'DayOfWeek')
+    , c('PositionType', 'Season', 'DayOfWeek', 'Conference')
+    , c('PositionType', 'Season', 'DayOfWeek', 'Conference', 'Division')
+    , c('PositionType', 'Season', 'DayOfWeek', 'Conference', 'Division', 'TeamCity')
   ) %>% 
   map(make_formula, 'MultiArrestFactor', intercept = FALSE) %>% 
   as.vector()
@@ -722,7 +719,7 @@ tbl_models %>%
 
 ## Assess all folds, all formulas, all models
 
-```{r eval=FALSE}
+```{r eval=TRUE}
 tbl_models <- tbl_models %>%
   mutate(
       misclass_tree = map_dbl(formula, cross_validate, tbl_folds, tree::tree)
@@ -732,8 +729,9 @@ tbl_models <- tbl_models %>%
 
 ##
 
-```{r}
-
+```{r echo=FALSE}
+tbl_models %>% 
+  knitr::kable()
 ```
 
 
@@ -742,15 +740,19 @@ tbl_models <- tbl_models %>%
 ## What did we learn Charlie Brown?
 
 * Categorical data is ubiquitous, but tricky to model
-* Consider non-linear approaches like tree-based and Naive Bayes
+* Non-linear approaches like tree-based methods and Naive Bayes look at categorical differently
 * MCA can address "curse of dimensionality" with categorical data
-* Don't lose heart! Fitting categorical data is hard. Research is light.
+* Let's all keep doing this! Fitting categorical data is hard. Research is light.
 
 ##
 
+Slides may be found here:
+
+http://pirategrunt.com/sparsity_blues/#/
+
 All of the code - even stuff you didn't see - is on GitHub
 
-github.com/pirategrunt/sparsity_blues
+https://github.com/pirategrunt
 
 ## Thank you!
 

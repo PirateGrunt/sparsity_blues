@@ -513,9 +513,7 @@ document.getElementsByTagName('head')[0].appendChild(style);
 </ul>
 </section><section id="the-data" class="slide level2">
 <h2>The data</h2>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">load</span>(<span class="st">&#39;./data/nfl_data.rda&#39;</span>)
-knitr<span class="op">::</span><span class="kw">include_graphics</span>(<span class="st">&#39;images/nfl_arrest.png&#39;</span>)</code></pre></div>
-<p><img src="images/nfl_arrest.png" /></p>
+<p><img src="images/nfl_arrest.png" height="600px" /></p>
 </section><section id="before-anyone-gets-carried-away" class="slide level2">
 <h2>Before anyone gets carried away…</h2>
 <p>From nflarrests.com:</p>
@@ -532,7 +530,6 @@ knitr<span class="op">::</span><span class="kw">include_graphics</span>(<span cl
 </ul>
 </section><section id="just-the-basic-facts" class="slide level2">
 <h2>Just the basic facts</h2>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">prob_multi_arrest &lt;-<span class="st"> </span><span class="kw">sum</span>(tbl_players<span class="op">$</span>MultiArrest) <span class="op">/</span><span class="st"> </span><span class="kw">nrow</span>(tbl_players)</code></pre></div>
 <ul>
 <li>Number of players who’ve been arrested: 651</li>
 <li>Number of players w/more than one arrest: 146</li>
@@ -605,9 +602,10 @@ tbl_linear &lt;-<span class="st"> </span><span class="kw">tibble</span>(
 </div>
 </section><section id="categorical-predictors-in-a-linear-model" class="slide level2">
 <h2>Categorical predictors in a linear model</h2>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">tbl_one_cat &lt;-<span class="st"> </span><span class="cf">function</span>(<span class="dt">cat_label =</span> <span class="st">&#39;a&#39;</span>, <span class="dt">sims =</span> <span class="fl">1e3</span>) {
-  slope &lt;-<span class="st"> </span><span class="kw">runif</span>(<span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">5</span>)
-  intercept &lt;-<span class="st"> </span><span class="kw">runif</span>(<span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">10</span>)
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">set.seed</span>(<span class="dv">1234</span>)
+tbl_one_cat &lt;-<span class="st"> </span><span class="cf">function</span>(<span class="dt">cat_label =</span> <span class="st">&#39;a&#39;</span>, <span class="dt">sims =</span> <span class="fl">1e3</span>) {
+  slope &lt;-<span class="st"> </span><span class="kw">rnorm</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">2</span>)
+  intercept &lt;-<span class="st"> </span><span class="kw">rnorm</span>(<span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">10</span>)
   <span class="kw">tibble</span>(
     <span class="dt">x =</span> <span class="kw">runif</span>(sims, <span class="dv">0</span>, <span class="dv">10</span>)
   , <span class="dt">e =</span> <span class="kw">rnorm</span>(sims, <span class="dt">sd =</span> <span class="dv">5</span>)
@@ -621,28 +619,13 @@ tbl_linear &lt;-<span class="st"> </span><span class="kw">tibble</span>(
 tbl_cat &lt;-<span class="st"> </span><span class="kw">map_dfr</span>(letters[<span class="dv">1</span><span class="op">:</span><span class="dv">5</span>], tbl_one_cat)</code></pre></div>
 </section><section id="different-intercepts" class="slide level2">
 <h2>Different intercepts</h2>
-<div class="left">
-
-</div>
-<div class'right'="">
-<p><img src="index_files/figure-revealjs/unnamed-chunk-9-1.png" width="768" /></p>
-</div>
+<p><img src="index_files/figure-revealjs/unnamed-chunk-8-1.png" width="768" /></p>
 </section><section id="different-slopes" class="slide level2">
 <h2>Different slopes</h2>
-<div class="left">
-
-</div>
-<div class="right">
-<p><img src="index_files/figure-revealjs/unnamed-chunk-11-1.png" width="768" /></p>
-</div>
+<p><img src="index_files/figure-revealjs/unnamed-chunk-9-1.png" width="768" /></p>
 </section><section id="or-both" class="slide level2">
 <h2>Or both</h2>
-<div class="left">
-
-</div>
-<div class="right">
-<p><img src="index_files/figure-revealjs/unnamed-chunk-13-1.png" width="768" /></p>
-</div>
+<p><img src="index_files/figure-revealjs/unnamed-chunk-10-1.png" width="768" /></p>
 </section><section id="issues" class="slide level2">
 <h2>Issues</h2>
 <ul>
@@ -663,8 +646,6 @@ tbl_cat &lt;-<span class="st"> </span><span class="kw">map_dfr</span>(letters[<s
 <th style="text-align: right;">categorya:x</th>
 <th style="text-align: right;">categoryb:x</th>
 <th style="text-align: right;">categoryc:x</th>
-<th style="text-align: right;">categoryd:x</th>
-<th style="text-align: right;">categorye:x</th>
 </tr>
 </thead>
 <tbody>
@@ -674,9 +655,7 @@ tbl_cat &lt;-<span class="st"> </span><span class="kw">map_dfr</span>(letters[<s
 <td style="text-align: right;">0</td>
 <td style="text-align: right;">0</td>
 <td style="text-align: right;">0</td>
-<td style="text-align: right;">0.9173309</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
+<td style="text-align: right;">8.6091538</td>
 <td style="text-align: right;">0</td>
 <td style="text-align: right;">0</td>
 </tr>
@@ -686,9 +665,7 @@ tbl_cat &lt;-<span class="st"> </span><span class="kw">map_dfr</span>(letters[<s
 <td style="text-align: right;">0</td>
 <td style="text-align: right;">0</td>
 <td style="text-align: right;">0</td>
-<td style="text-align: right;">0.4709980</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
+<td style="text-align: right;">6.4031061</td>
 <td style="text-align: right;">0</td>
 <td style="text-align: right;">0</td>
 </tr>
@@ -698,9 +675,7 @@ tbl_cat &lt;-<span class="st"> </span><span class="kw">map_dfr</span>(letters[<s
 <td style="text-align: right;">0</td>
 <td style="text-align: right;">0</td>
 <td style="text-align: right;">0</td>
-<td style="text-align: right;">9.2954010</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0949576</td>
 <td style="text-align: right;">0</td>
 <td style="text-align: right;">0</td>
 </tr>
@@ -710,9 +685,7 @@ tbl_cat &lt;-<span class="st"> </span><span class="kw">map_dfr</span>(letters[<s
 <td style="text-align: right;">0</td>
 <td style="text-align: right;">0</td>
 <td style="text-align: right;">0</td>
-<td style="text-align: right;">0.0657672</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
+<td style="text-align: right;">2.3255051</td>
 <td style="text-align: right;">0</td>
 <td style="text-align: right;">0</td>
 </tr>
@@ -722,9 +695,7 @@ tbl_cat &lt;-<span class="st"> </span><span class="kw">map_dfr</span>(letters[<s
 <td style="text-align: right;">0</td>
 <td style="text-align: right;">0</td>
 <td style="text-align: right;">0</td>
-<td style="text-align: right;">7.8999247</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
+<td style="text-align: right;">6.6608376</td>
 <td style="text-align: right;">0</td>
 <td style="text-align: right;">0</td>
 </tr>
@@ -734,9 +705,7 @@ tbl_cat &lt;-<span class="st"> </span><span class="kw">map_dfr</span>(letters[<s
 <td style="text-align: right;">0</td>
 <td style="text-align: right;">0</td>
 <td style="text-align: right;">0</td>
-<td style="text-align: right;">0.4505945</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
+<td style="text-align: right;">5.1425114</td>
 <td style="text-align: right;">0</td>
 <td style="text-align: right;">0</td>
 </tr>
@@ -746,9 +715,7 @@ tbl_cat &lt;-<span class="st"> </span><span class="kw">map_dfr</span>(letters[<s
 <td style="text-align: right;">0</td>
 <td style="text-align: right;">0</td>
 <td style="text-align: right;">0</td>
-<td style="text-align: right;">9.4238588</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
+<td style="text-align: right;">6.9359129</td>
 <td style="text-align: right;">0</td>
 <td style="text-align: right;">0</td>
 </tr>
@@ -758,9 +725,7 @@ tbl_cat &lt;-<span class="st"> </span><span class="kw">map_dfr</span>(letters[<s
 <td style="text-align: right;">0</td>
 <td style="text-align: right;">0</td>
 <td style="text-align: right;">0</td>
-<td style="text-align: right;">2.8998601</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
+<td style="text-align: right;">5.4497484</td>
 <td style="text-align: right;">0</td>
 <td style="text-align: right;">0</td>
 </tr>
@@ -770,9 +735,7 @@ tbl_cat &lt;-<span class="st"> </span><span class="kw">map_dfr</span>(letters[<s
 <td style="text-align: right;">0</td>
 <td style="text-align: right;">0</td>
 <td style="text-align: right;">0</td>
-<td style="text-align: right;">2.1905712</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
+<td style="text-align: right;">2.8273358</td>
 <td style="text-align: right;">0</td>
 <td style="text-align: right;">0</td>
 </tr>
@@ -782,9 +745,7 @@ tbl_cat &lt;-<span class="st"> </span><span class="kw">map_dfr</span>(letters[<s
 <td style="text-align: right;">0</td>
 <td style="text-align: right;">0</td>
 <td style="text-align: right;">0</td>
-<td style="text-align: right;">2.8491056</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
+<td style="text-align: right;">9.2343348</td>
 <td style="text-align: right;">0</td>
 <td style="text-align: right;">0</td>
 </tr>
@@ -836,7 +797,9 @@ prior_y
 ## [1] 0.2242704</code></pre></div>
 </section><section id="two-categories" class="slide level2">
 <h2>Two categories</h2>
+<p>One:</p>
 <p><span class="math display">\[Pr(Y=y|X=x)=\frac{Pr(Y = y) * Pr(X=x|Y=y)}{Pr(X=x)}\]</span></p>
+<p>Two:</p>
 <p><span class="math display">\[Pr(Y=y|X=x, Z=z)\]</span></p>
 <p><span class="math display">\[=\frac{Pr(Y = y) * Pr(X=x|Y=y) * Pr(Z=z|Y=y)}{Pr(X=x) * Pr(Z=z)}\]</span></p>
 </section><section id="how-about-a-lot-of-categories" class="slide level2">
@@ -849,7 +812,7 @@ prior_y
 )</code></pre></div>
 </section><section id="how-do-our-players-look" class="slide level2">
 <h2>How do our players look?</h2>
-<p><img src="index_files/figure-revealjs/unnamed-chunk-19-1.png" width="768" /></p>
+<p><img src="index_files/figure-revealjs/unnamed-chunk-16-1.png" width="768" /></p>
 </section><section id="naive-bayes-1" class="slide level2">
 <h2>Naive Bayes</h2>
 <ul>
@@ -886,13 +849,13 @@ fit_tree &lt;-<span class="st"> </span>tree<span class="op">::</span><span class
 ## Regression tree:
 ## tree::tree(formula = y ~ x, data = tbl_linear)
 ## Number of terminal nodes:  5 
-## Residual mean deviance:  26.31 = 26180 / 995 
+## Residual mean deviance:  22.64 = 22530 / 995 
 ## Distribution of residuals:
 ##       Min.    1st Qu.     Median       Mean    3rd Qu.       Max. 
-## -17.520000  -3.464000  -0.007694   0.000000   3.602000  14.430000</code></pre></div>
+## -17.290000  -3.194000   0.000456   0.000000   3.007000  20.740000</code></pre></div>
 </section><section id="section-1" class="slide level2">
 <h2></h2>
-<p><img src="index_files/figure-revealjs/unnamed-chunk-21-1.png" width="768" /></p>
+<p><img src="index_files/figure-revealjs/unnamed-chunk-18-1.png" width="768" /></p>
 </section><section id="categorical-fit" class="slide level2">
 <h2>Categorical fit</h2>
 <table>
@@ -969,6 +932,18 @@ fit_tree &lt;-<span class="st"> </span>tree<span class="op">::</span><span class
 </section><section id="which-column-works-better-on-our-toy-data" class="slide level2">
 <h2>Which column works better on our toy data?</h2>
 <div class="left">
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">entropy</span>(tbl_toy<span class="op">$</span>output)
+## [1] 0.6730117
+
+tbl_toy <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">entropy_post</span>(output, a)
+## [1] 0.3819085
+
+tbl_toy <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">entropy_post</span>(output, b)
+## [1] 0.6591674</code></pre></div>
+</div>
+<div class="right">
 <table>
 <thead>
 <tr>
@@ -1042,18 +1017,6 @@ black
 </tbody>
 </table>
 </div>
-<div class="right">
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">entropy</span>(tbl_toy<span class="op">$</span>output)
-## [1] 0.6730117
-
-tbl_toy <span class="op">%&gt;%</span><span class="st"> </span>
-<span class="st">  </span><span class="kw">entropy_post</span>(output, a)
-## [1] 0.3819085
-
-tbl_toy <span class="op">%&gt;%</span><span class="st"> </span>
-<span class="st">  </span><span class="kw">entropy_post</span>(output, b)
-## [1] 0.6591674</code></pre></div>
-</div>
 </section><section id="potential-node-splits" class="slide level2">
 <h2>Potential node splits</h2>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">entropy</span>(tbl_players<span class="op">$</span>MultiArrestNum)
@@ -1091,12 +1054,12 @@ fit_tree &lt;-<span class="st"> </span><span class="kw">tree</span>(
 <h2>Plot the tree</h2>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">plot</span>(fit_tree)
 <span class="kw">text</span>(fit_tree, <span class="dt">pretty =</span> <span class="dv">0</span>)</code></pre></div>
-<p><img src="index_files/figure-revealjs/unnamed-chunk-29-1.png" width="768" /></p>
+<p><img src="index_files/figure-revealjs/unnamed-chunk-26-1.png" width="768" /></p>
 </section><section id="note" class="slide level2">
 <h2>Note</h2>
 <ol type="1">
 <li>Full disclosure: I used both <code>rpart</code> and <code>tree</code> for the fit. For reasons that I’ve not yet debugged, <code>rpart</code> gave me no nodes.</li>
-<li>A packages insistence on using factors may cause you to lose your mind.</li>
+<li>A package’s insistence on using factors may cause you to lose your mind.</li>
 </ol>
 </section><section id="baggingrandom-forests" class="slide level2">
 <h2>Bagging/random forests</h2>
@@ -1116,14 +1079,20 @@ fit_forest &lt;-<span class="st"> </span><span class="kw">randomForest</span>(
 </section><section id="variable-importance" class="slide level2">
 <h2>Variable importance</h2>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">varImpPlot</span>(fit_forest)</code></pre></div>
-<p><img src="index_files/figure-revealjs/unnamed-chunk-31-1.png" width="768" /></p>
+<p><img src="index_files/figure-revealjs/unnamed-chunk-28-1.png" width="768" /></p>
 </section></section>
 <section><section id="multiple-correspondence-analysis" class="titleslide slide level1"><h1>Multiple Correspondence Analysis</h1></section><section id="what-is-mca" class="slide level2">
 <h2>What is MCA?</h2>
 <ul>
 <li>PCA, but for categories</li>
-<li>CA, but multiple</li>
-<li>FactoMineR</li>
+<li>CA, but for multiple variables</li>
+</ul>
+</section><section id="why-mca" class="slide level2">
+<h2>Why MCA?</h2>
+<ul>
+<li>Dimensionality reduction</li>
+<li>Could also consider (hierarchical) cluster analysis</li>
+<li>Others?</li>
 </ul>
 </section><section id="how-does-it-work" class="slide level2">
 <h2>How does it work?</h2>
@@ -1237,48 +1206,21 @@ tbl_toy_mca_one_hot <span class="op">%&gt;%</span><span class="st"> </span>knitr
 
 <span class="kw">library</span>(FactoMineR)
 fit_mca &lt;-<span class="st"> </span><span class="kw">MCA</span>(tbl_cats, <span class="dt">graph =</span> <span class="ot">FALSE</span>)</code></pre></div>
-</section><section id="why-mca" class="slide level2">
-<h2>Why MCA?</h2>
-<ul>
-<li>Dimensionality reduction</li>
-<li>Could also consider (hierarchical) cluster analysis</li>
-<li>Others?</li>
-</ul>
 </section><section id="visualize-in-the-reduced-dimensions" class="slide level2">
 <h2>Visualize in the reduced dimensions</h2>
-<p><img src="index_files/figure-revealjs/unnamed-chunk-35-1.png" width="768" /></p>
+<p><img src="index_files/figure-revealjs/unnamed-chunk-32-1.png" width="768" /></p>
 </section><section id="mca-categorical---continuous" class="slide level2">
 <h2>MCA: categorical -&gt; continuous</h2>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">fit_logistic_mca &lt;-<span class="st"> </span><span class="kw">glm</span>(
-  MultiArrestNum <span class="op">~</span><span class="st"> </span><span class="dv">0</span> <span class="op">+</span><span class="st"> </span>dim_<span class="dv">1</span> <span class="op">+</span><span class="st"> </span>dim_<span class="dv">2</span>
-  , <span class="dt">data =</span> tbl_players
-  , <span class="dt">family =</span> <span class="kw">binomial</span>())
-
-fit_logistic_mca <span class="op">%&gt;%</span><span class="st"> </span>
-<span class="st">  </span><span class="kw">summary</span>()
-## 
-## Call:
-## glm(formula = MultiArrestNum ~ 0 + dim_1 + dim_2, family = binomial(), 
-##     data = tbl_players)
-## 
-## Deviance Residuals: 
-##    Min      1Q  Median      3Q     Max  
-## -1.815  -1.182  -1.158  -1.129   1.236  
-## 
-## Coefficients:
-##       Estimate Std. Error z value Pr(&gt;|z|)  
-## dim_1  0.27532    0.16245   1.695   0.0901 .
-## dim_2 -0.05509    0.13790  -0.399   0.6895  
-## ---
-## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
-## 
-## (Dispersion parameter for binomial family taken to be 1)
-## 
-##     Null deviance: 902.48  on 651  degrees of freedom
-## Residual deviance: 898.83  on 649  degrees of freedom
-## AIC: 902.83
-## 
-## Number of Fisher Scoring iterations: 4</code></pre></div>
+<p>Call: glm(formula = MultiArrestNum ~ 0 + dim_1 + dim_2, family = binomial(), data = tbl_players)</p>
+<p>Deviance Residuals: Min 1Q Median 3Q Max<br />
+-1.815 -1.182 -1.158 -1.129 1.236</p>
+<p>Coefficients: Estimate Std. Error z value Pr(&gt;|z|)<br />
+dim_1 0.27532 0.16245 1.695 0.0901 . dim_2 -0.05509 0.13790 -0.399 0.6895<br />
+— Signif. codes: 0 ‘<em><strong>’ 0.001 ’</strong>’ 0.01 ’</em>’ 0.05 ‘.’ 0.1 ‘’ 1</p>
+<p>(Dispersion parameter for binomial family taken to be 1)</p>
+<pre><code>Null deviance: 902.48  on 651  degrees of freedom</code></pre>
+<p>Residual deviance: 898.83 on 649 degrees of freedom AIC: 902.83</p>
+<p>Number of Fisher Scoring iterations: 4</p>
 </section></section>
 <section><section id="lets-model" class="titleslide slide level1"><h1>Let’s model!</h1></section><section id="how-well-model" class="slide level2">
 <h2>How we’ll model</h2>
@@ -1293,7 +1235,7 @@ fit_logistic_mca <span class="op">%&gt;%</span><span class="st"> </span>
 <p>Misclassification rate</p>
 <p>Other options:</p>
 <ul>
-<li>True positive rate:</li>
+<li>True positive rate</li>
 <li>False positive rate</li>
 <li>Other confusion matrix metrics</li>
 <li>Area under the curve (AUC): A number close to 1 is good</li>
@@ -1313,9 +1255,20 @@ fit_logistic_mca <span class="op">%&gt;%</span><span class="st"> </span>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(modelr)
 <span class="kw">set.seed</span>(<span class="dv">1234</span>)
 tbl_folds &lt;-<span class="st"> </span><span class="kw">crossv_kfold</span>(tbl_players, <span class="dt">k =</span> <span class="dv">10</span>)</code></pre></div>
+</section><section id="tbl_folds" class="slide level2">
+<h2><code>tbl_folds</code></h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">tbl_folds <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">head</span>()
+## # A tibble: 6 x 3
+##   train          test           .id  
+##   &lt;list&gt;         &lt;list&gt;         &lt;chr&gt;
+## 1 &lt;S3: resample&gt; &lt;S3: resample&gt; 01   
+## 2 &lt;S3: resample&gt; &lt;S3: resample&gt; 02   
+## 3 &lt;S3: resample&gt; &lt;S3: resample&gt; 03   
+## 4 &lt;S3: resample&gt; &lt;S3: resample&gt; 04   
+## 5 &lt;S3: resample&gt; &lt;S3: resample&gt; 05   
+## 6 &lt;S3: resample&gt; &lt;S3: resample&gt; 06</code></pre></div>
 </section><section id="whats-in-tbl_folds" class="slide level2">
 <h2>What’s in tbl_folds?</h2>
-<p>[ignore if you’re not into programming]</p>
 <ul>
 <li>Each row in the tibble holds:</li>
 <li>a training <code>resample</code> object</li>
@@ -1360,6 +1313,12 @@ misclasses &lt;-<span class="st"> </span><span class="kw">cross_validate</span>(
     <span class="kw">as.formula</span>(<span class="st">&#39;MultiArrestFactor ~ PositionType + Season&#39;</span>)
   , tbl_folds
   , tree<span class="op">::</span>tree
+)
+
+misclasses &lt;-<span class="st"> </span><span class="kw">cross_validate</span>(
+    <span class="kw">as.formula</span>(<span class="st">&#39;MultiArrestFactor ~ PositionType + Season&#39;</span>)
+  , tbl_folds
+  , naive_bayes
 )</code></pre></div>
 </section><section id="make-formulas" class="slide level2">
 <h2>Make formulas</h2>
@@ -1378,7 +1337,11 @@ misclasses &lt;-<span class="st"> </span><span class="kw">cross_validate</span>(
 <h2>A few formulas</h2>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">the_formulas &lt;-<span class="st"> </span><span class="kw">list</span>(
       <span class="kw">c</span>(<span class="st">&#39;PositionType&#39;</span>, <span class="st">&#39;Season&#39;</span>)
-    , <span class="kw">c</span>(<span class="st">&#39;DayOfWeek&#39;</span>, <span class="st">&#39;Encounter&#39;</span>, <span class="st">&#39;PositionType&#39;</span>)
+    , <span class="kw">c</span>(<span class="st">&#39;PositionType&#39;</span>, <span class="st">&#39;Season&#39;</span>, <span class="st">&#39;DayOfWeek&#39;</span>)
+    , <span class="kw">c</span>(<span class="st">&#39;PositionType&#39;</span>, <span class="st">&#39;Season&#39;</span>, <span class="st">&#39;DayOfWeek&#39;</span>)
+    , <span class="kw">c</span>(<span class="st">&#39;PositionType&#39;</span>, <span class="st">&#39;Season&#39;</span>, <span class="st">&#39;DayOfWeek&#39;</span>, <span class="st">&#39;Conference&#39;</span>)
+    , <span class="kw">c</span>(<span class="st">&#39;PositionType&#39;</span>, <span class="st">&#39;Season&#39;</span>, <span class="st">&#39;DayOfWeek&#39;</span>, <span class="st">&#39;Conference&#39;</span>, <span class="st">&#39;Division&#39;</span>)
+    , <span class="kw">c</span>(<span class="st">&#39;PositionType&#39;</span>, <span class="st">&#39;Season&#39;</span>, <span class="st">&#39;DayOfWeek&#39;</span>, <span class="st">&#39;Conference&#39;</span>, <span class="st">&#39;Division&#39;</span>, <span class="st">&#39;TeamCity&#39;</span>)
   ) <span class="op">%&gt;%</span><span class="st"> </span>
 <span class="st">  </span><span class="kw">map</span>(make_formula, <span class="st">&#39;MultiArrestFactor&#39;</span>, <span class="dt">intercept =</span> <span class="ot">FALSE</span>) <span class="op">%&gt;%</span><span class="st"> </span>
 <span class="st">  </span><span class="kw">as.vector</span>()
@@ -1389,6 +1352,9 @@ tbl_models &lt;-<span class="st"> </span><span class="kw">tibble</span>(
 </section><section id="our-models-tibble" class="slide level2">
 <h2>Our models tibble</h2>
 <table>
+<colgroup>
+<col style="width: 100%" />
+</colgroup>
 <thead>
 <tr class="header">
 <th style="text-align: left;">formula</th>
@@ -1399,7 +1365,19 @@ tbl_models &lt;-<span class="st"> </span><span class="kw">tibble</span>(
 <td style="text-align: left;">MultiArrestFactor ~ PositionType + Season</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">MultiArrestFactor ~ DayOfWeek + Encounter + PositionType</td>
+<td style="text-align: left;">MultiArrestFactor ~ PositionType + Season + DayOfWeek</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">MultiArrestFactor ~ PositionType + Season + DayOfWeek</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">MultiArrestFactor ~ PositionType + Season + DayOfWeek + Conference</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">MultiArrestFactor ~ PositionType + Season + DayOfWeek + Conference + Division</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">MultiArrestFactor ~ PositionType + Season + DayOfWeek + Conference + Division + TeamCity</td>
 </tr>
 </tbody>
 </table>
@@ -1412,19 +1390,62 @@ tbl_models &lt;-<span class="st"> </span><span class="kw">tibble</span>(
   )</code></pre></div>
 </section><section id="section-2" class="slide level2">
 <h2></h2>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">formula</th>
+<th style="text-align: right;">misclass_tree</th>
+<th style="text-align: right;">misclass_nb</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">MultiArrestFactor ~ PositionType + Season</td>
+<td style="text-align: right;">0.224289</td>
+<td style="text-align: right;">0.2273427</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">MultiArrestFactor ~ PositionType + Season + DayOfWeek</td>
+<td style="text-align: right;">0.224289</td>
+<td style="text-align: right;">0.2304196</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">MultiArrestFactor ~ PositionType + Season + DayOfWeek</td>
+<td style="text-align: right;">0.224289</td>
+<td style="text-align: right;">0.2304196</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">MultiArrestFactor ~ PositionType + Season + DayOfWeek + Conference</td>
+<td style="text-align: right;">0.224289</td>
+<td style="text-align: right;">0.2319580</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">MultiArrestFactor ~ PositionType + Season + DayOfWeek + Conference + Division</td>
+<td style="text-align: right;">0.224289</td>
+<td style="text-align: right;">0.2319580</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">MultiArrestFactor ~ PositionType + Season + DayOfWeek + Conference + Division + TeamCity</td>
+<td style="text-align: right;">0.224289</td>
+<td style="text-align: right;">0.2550350</td>
+</tr>
+</tbody>
+</table>
 </section></section>
 <section><section id="conclusion" class="titleslide slide level1"><h1>Conclusion</h1></section><section id="what-did-we-learn-charlie-brown" class="slide level2">
 <h2>What did we learn Charlie Brown?</h2>
 <ul>
 <li>Categorical data is ubiquitous, but tricky to model</li>
-<li>Consider non-linear approaches like tree-based and Naive Bayes</li>
+<li>Non-linear approaches like tree-based methods and Naive Bayes look at categorical differently</li>
 <li>MCA can address “curse of dimensionality” with categorical data</li>
-<li>Don’t lose heart! Fitting categorical data is hard. Research is light.</li>
+<li>Let’s all keep doing this! Fitting categorical data is hard. Research is light.</li>
 </ul>
 </section><section id="section-3" class="slide level2">
 <h2></h2>
+<p>Slides may be found here:</p>
+<p><a href="http://pirategrunt.com/sparsity_blues/#/" class="uri">http://pirategrunt.com/sparsity_blues/#/</a></p>
 <p>All of the code - even stuff you didn’t see - is on GitHub</p>
-<p>github.com/pirategrunt/sparsity_blues</p>
+<p><a href="https://github.com/pirategrunt" class="uri">https://github.com/pirategrunt</a></p>
 </section><section id="thank-you" class="slide level2">
 <h2>Thank you!</h2>
 </section><section id="qa" class="slide level2">

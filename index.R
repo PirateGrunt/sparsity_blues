@@ -30,9 +30,10 @@ tbl_logistic %>%
   ggplot(aes(x, y)) + 
   geom_point() + 
   geom_smooth(method = glm,  method.args = list(family = "binomial"))
+set.seed(1234)
 tbl_one_cat <- function(cat_label = 'a', sims = 1e3) {
-  slope <- runif(1, 0, 5)
-  intercept <- runif(1, 0, 10)
+  slope <- rnorm(1, 2, 2)
+  intercept <- rnorm(1, 0, 10)
   tibble(
     x = runif(sims, 0, 10)
   , e = rnorm(sims, sd = 5)
@@ -64,8 +65,9 @@ plt <- tbl_cat %>%
   geom_smooth(method = lm, aes(color = category), size = 2)
 plt
 fit_both <- lm(y ~ 0 + category + x:category, data = tbl_cat)
-fit_both %>% 
-  model.matrix() %>% 
+mojo <- fit_both %>% 
+  model.matrix()
+mojo[, 1:8]%>% 
   head(10) %>% 
   knitr::kable()
 library(naivebayes)
@@ -95,7 +97,8 @@ tbl_players %>%
   arrange(desc(MultiArrestPred)) %>% 
   select(MultiArrestPred) %>% 
   ggplot(aes(MultiArrestPred)) + 
-  geom_histogram(binwidth = .02)
+  geom_histogram(binwidth = .02) + 
+  geom_vline(xintercept = prob_multi_arrest, color = 'red')
 library(tree)
 fit_tree <- tree::tree(formula = y ~ x, data = tbl_linear)
 summary(fit_tree)
@@ -141,8 +144,6 @@ entropy_post <- function(tbl, out_col, split_col) {
     ) %>%
     pull(ent_post)
 }
-tbl_toy %>% 
-  knitr::kable(format = 'html')
 entropy(tbl_toy$output)
 
 tbl_toy %>% 
@@ -150,6 +151,8 @@ tbl_toy %>%
 
 tbl_toy %>% 
   entropy_post(output, b)
+tbl_toy %>% 
+  knitr::kable(format = 'html')
 entropy(tbl_players$MultiArrestNum)
 tbl_players %>% 
   entropy_post(MultiArrestNum, PositionType)
@@ -206,7 +209,7 @@ tbl_players <- tbl_players %>%
   )
 
 tbl_players %>% 
-  ggplot(aes(dim_1, dim_2)) + 
+  ggplot(aes(dim_1, dim_2), size = 2, alpha = 0.7) + 
   geom_point(aes(color = PositionType))
 fit_logistic_mca <- glm(
   MultiArrestNum ~ 0 + dim_1 + dim_2
@@ -226,6 +229,7 @@ misclass <- function(tbl_test, fit_obj) {
 library(modelr)
 set.seed(1234)
 tbl_folds <- crossv_kfold(tbl_players, k = 10)
+tbl_folds %>% head()
 tbl_folds$train[[1]] %>% class()
 assess_fold <- function(obj_train, obj_test, method, the_formula) {
   tbl_train <- obj_train %>% as.data.frame()
@@ -259,6 +263,12 @@ misclasses <- cross_validate(
   , tbl_folds
   , tree::tree
 )
+
+misclasses <- cross_validate(
+    as.formula('MultiArrestFactor ~ PositionType + Season')
+  , tbl_folds
+  , naive_bayes
+)
 make_formula <- function(predictors, target, intercept = TRUE) {
   str_predictors <- paste(predictors, collapse = '+')
   if (intercept) {
@@ -272,7 +282,11 @@ make_formula <- function(predictors, target, intercept = TRUE) {
 }
 the_formulas <- list(
       c('PositionType', 'Season')
-    , c('DayOfWeek', 'Encounter', 'PositionType')
+    , c('PositionType', 'Season', 'DayOfWeek')
+    , c('PositionType', 'Season', 'DayOfWeek')
+    , c('PositionType', 'Season', 'DayOfWeek', 'Conference')
+    , c('PositionType', 'Season', 'DayOfWeek', 'Conference', 'Division')
+    , c('PositionType', 'Season', 'DayOfWeek', 'Conference', 'Division', 'TeamCity')
   ) %>% 
   map(make_formula, 'MultiArrestFactor', intercept = FALSE) %>% 
   as.vector()
@@ -282,8 +296,10 @@ tbl_models <- tibble(
 )
 tbl_models %>% 
   knitr::kable()
-## tbl_models <- tbl_models %>%
-##   mutate(
-##       misclass_tree = map_dbl(formula, cross_validate, tbl_folds, tree::tree)
-##     , misclass_nb = map_dbl(formula, cross_validate, tbl_folds, naive_bayes)
-##   )
+tbl_models <- tbl_models %>%
+  mutate(
+      misclass_tree = map_dbl(formula, cross_validate, tbl_folds, tree::tree)
+    , misclass_nb = map_dbl(formula, cross_validate, tbl_folds, naive_bayes)
+  )
+tbl_models %>% 
+  knitr::kable()

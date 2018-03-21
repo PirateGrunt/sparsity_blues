@@ -13,14 +13,18 @@
 }
 
 .reveal .left {
-  font-size: 67%;
+  font-size: 80%;
   left:-8.33%;
   float: left;
-  width:48%;
+  width:50%;
+}
+
+.reveal .left .sourceCode {
+  font-size: 100%;
 }
 
 .reveal .right {
-  font-size: 67%;
+  font-size: 90%;
   left:31.25%;
   float: right;
   width:48%;
