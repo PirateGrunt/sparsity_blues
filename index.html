@@ -98,7 +98,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
     <style type="text/css">code{white-space: pre;}</style>
 
-    <link rel="stylesheet" href="css\revealOpts.css"/>
+    <link rel="stylesheet" href="css/revealOpts.css"/>
 
 <!-- Printing and PDF exports -->
 <script id="paper-css" type="application/dynamic-css">
@@ -513,7 +513,7 @@ document.getElementsByTagName('head')[0].appendChild(style);
 </ul>
 </section><section id="the-data" class="slide level2">
 <h2>The data</h2>
-<p><img src="images/nfl_arrest.png" height="600px" /></p>
+<p><img src="images/nfl_arrest.png" width="686" height="600px" /></p>
 </section><section id="before-anyone-gets-carried-away" class="slide level2">
 <h2>Before anyone gets carried away…</h2>
 <p>From nflarrests.com:</p>
@@ -531,9 +531,9 @@ document.getElementsByTagName('head')[0].appendChild(style);
 </section><section id="just-the-basic-facts" class="slide level2">
 <h2>Just the basic facts</h2>
 <ul>
-<li>Number of players who’ve been arrested: 651</li>
+<li>Number of players who’ve been arrested: 673</li>
 <li>Number of players w/more than one arrest: 146</li>
-<li>Probability of second arrest: 22.4%</li>
+<li>Probability of second arrest: 21.7%</li>
 </ul>
 <p>So there is a small probability of having more than one arrest. Compare this to Bailey/Simon probability of second accident.</p>
 </section></section>
@@ -593,7 +593,7 @@ tbl_linear &lt;-<span class="st"> </span><span class="kw">tibble</span>(
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">tbl_logistic &lt;-<span class="st"> </span>tbl_linear <span class="op">%&gt;%</span><span class="st"> </span>
 <span class="st">  </span><span class="kw">mutate</span>(
       <span class="dt">e =</span> <span class="kw">rlogis</span>(<span class="fl">1e3</span>)
-    , <span class="dt">latent =</span> <span class="op">-</span><span class="fl">7.5</span> <span class="op">+</span><span class="st"> </span><span class="dv">2</span> <span class="op">*</span><span class="st"> </span>x <span class="op">+</span><span class="st"> </span>e
+    , <span class="dt">latent =</span> <span class="fl">-7.5</span> <span class="op">+</span><span class="st"> </span><span class="dv">2</span> <span class="op">*</span><span class="st"> </span>x <span class="op">+</span><span class="st"> </span>e
     , <span class="dt">y =</span> <span class="kw">as.integer</span>(latent <span class="op">&gt;</span><span class="st"> </span><span class="dv">0</span>)
   )</code></pre></div>
 </div>
@@ -773,14 +773,14 @@ fit_nb &lt;-<span class="st"> </span><span class="kw">naive_bayes</span>(
 ## A priori probabilities: 
 ## 
 ##     FALSE      TRUE 
-## 0.7757296 0.2242704 
+## 0.7830609 0.2169391 
 ## 
 ## Tables: 
 ##             
 ## PositionType       FALSE        TRUE
-##            D 0.534653465 0.541095890
-##            O 0.457425743 0.424657534
-##            S 0.007920792 0.034246575</code></pre>
+##            D 0.529411765 0.541095890
+##            O 0.462998102 0.424657534
+##            S 0.007590133 0.034246575</code></pre>
 </section><section id="can-we-work-that-out-manually" class="slide level2">
 <h2>Can we work that out manually?</h2>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">prior_y &lt;-<span class="st"> </span><span class="kw">sum</span>(tbl_players<span class="op">$</span>MultiArrest) <span class="op">/</span><span class="st"> </span><span class="kw">nrow</span>(tbl_players)
@@ -788,13 +788,13 @@ prob_x &lt;-<span class="st"> </span><span class="kw">sum</span>(tbl_players<spa
 tbl_cond &lt;-<span class="st"> </span>tbl_players <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">filter</span>(MultiArrest)
 prob_x_cond &lt;-<span class="st"> </span><span class="kw">sum</span>(tbl_cond<span class="op">$</span>PositionType <span class="op">==</span><span class="st"> &#39;D&#39;</span>) <span class="op">/</span><span class="st"> </span><span class="kw">nrow</span>(tbl_cond)
 prior_y <span class="op">*</span><span class="st"> </span>prob_x_cond <span class="op">/</span><span class="st"> </span>prob_x
-## [1] 0.226361
+## [1] 0.2206704
 <span class="kw">predict</span>(fit_nb, <span class="dt">type =</span> <span class="st">&#39;prob&#39;</span>)[<span class="dv">1</span>, <span class="st">&#39;TRUE&#39;</span>]
-##     TRUE 
-## 0.226361
+##      TRUE 
+## 0.2206704
 
 prior_y
-## [1] 0.2242704</code></pre></div>
+## [1] 0.2169391</code></pre></div>
 </section><section id="two-categories" class="slide level2">
 <h2>Two categories</h2>
 <p>One:</p>
@@ -848,11 +848,11 @@ fit_tree &lt;-<span class="st"> </span>tree<span class="op">::</span><span class
 ## 
 ## Regression tree:
 ## tree::tree(formula = y ~ x, data = tbl_linear)
-## Number of terminal nodes:  5 
-## Residual mean deviance:  22.64 = 22530 / 995 
+## Number of terminal nodes:  6 
+## Residual mean deviance:  23.37 = 23230 / 994 
 ## Distribution of residuals:
-##       Min.    1st Qu.     Median       Mean    3rd Qu.       Max. 
-## -17.290000  -3.194000   0.000456   0.000000   3.007000  20.740000</code></pre></div>
+##      Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
+## -15.27000  -3.02700   0.03153   0.00000   3.31700  15.82000</code></pre></div>
 </section><section id="section-1" class="slide level2">
 <h2></h2>
 <p><img src="index_files/figure-revealjs/unnamed-chunk-18-1.png" width="768" /></p>
@@ -1020,18 +1020,18 @@ black
 </section><section id="potential-node-splits" class="slide level2">
 <h2>Potential node splits</h2>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">entropy</span>(tbl_players<span class="op">$</span>MultiArrestNum)
-## [1] 0.5322599
+## [1] 0.5230065
 tbl_players <span class="op">%&gt;%</span><span class="st"> </span>
 <span class="st">  </span><span class="kw">entropy_post</span>(MultiArrestNum, PositionType)
-## [1] 0.528498
+## [1] 0.5190857
 
 tbl_players <span class="op">%&gt;%</span><span class="st"> </span>
 <span class="st">  </span><span class="kw">entropy_post</span>(MultiArrestNum, Season)
-## [1] 0.5092358
+## [1] 0.4943877
 
 tbl_players <span class="op">%&gt;%</span><span class="st"> </span>
 <span class="st">  </span><span class="kw">entropy_post</span>(MultiArrestNum, ArrestSeasonState)
-## [1] 0.5313111</code></pre></div>
+## [1] 0.5218782</code></pre></div>
 </section><section id="what-splits" class="slide level2">
 <h2>What splits?</h2>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(rpart)
@@ -1047,9 +1047,9 @@ fit_tree &lt;-<span class="st"> </span><span class="kw">tree</span>(
 ##     data = tbl_players)
 ## Variables actually used in tree construction:
 ## [1] &quot;Season&quot;       &quot;PositionType&quot;
-## Number of terminal nodes:  3 
-## Residual mean deviance:  1.021 = 661.6 / 648 
-## Misclassification error rate: 0.2197 = 143 / 651</code></pre></div>
+## Number of terminal nodes:  4 
+## Residual mean deviance:  0.9865 = 659.9 / 669 
+## Misclassification error rate: 0.2125 = 143 / 673</code></pre></div>
 </section><section id="plot-the-tree" class="slide level2">
 <h2>Plot the tree</h2>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">plot</span>(fit_tree)
@@ -1213,14 +1213,14 @@ fit_mca &lt;-<span class="st"> </span><span class="kw">MCA</span>(tbl_cats, <spa
 <h2>MCA: categorical -&gt; continuous</h2>
 <p>Call: glm(formula = MultiArrestNum ~ 0 + dim_1 + dim_2, family = binomial(), data = tbl_players)</p>
 <p>Deviance Residuals: Min 1Q Median 3Q Max<br />
--1.815 -1.182 -1.158 -1.129 1.236</p>
+-1.874 -1.180 -1.159 -1.134 1.233</p>
 <p>Coefficients: Estimate Std. Error z value Pr(&gt;|z|)<br />
-dim_1 0.27532 0.16245 1.695 0.0901 . dim_2 -0.05509 0.13790 -0.399 0.6895<br />
+dim_1 0.29050 0.16491 1.762 0.0781 . dim_2 0.05891 0.13700 0.430 0.6672<br />
 — Signif. codes: 0 ‘<em><strong>’ 0.001 ’</strong>’ 0.01 ’</em>’ 0.05 ‘.’ 0.1 ‘’ 1</p>
 <p>(Dispersion parameter for binomial family taken to be 1)</p>
-<pre><code>Null deviance: 902.48  on 651  degrees of freedom</code></pre>
-<p>Residual deviance: 898.83 on 649 degrees of freedom AIC: 902.83</p>
-<p>Number of Fisher Scoring iterations: 4</p>
+<pre><code>Null deviance: 932.98  on 673  degrees of freedom</code></pre>
+<p>Residual deviance: 928.92 on 671 degrees of freedom AIC: 932.92</p>
+<p>Number of Fisher Scoring iterations: 3</p>
 </section></section>
 <section><section id="lets-model" class="titleslide slide level1"><h1>Let’s model!</h1></section><section id="how-well-model" class="slide level2">
 <h2>How we’ll model</h2>
@@ -1401,33 +1401,33 @@ tbl_models &lt;-<span class="st"> </span><span class="kw">tibble</span>(
 <tbody>
 <tr class="odd">
 <td style="text-align: left;">MultiArrestFactor ~ PositionType + Season</td>
-<td style="text-align: right;">0.224289</td>
-<td style="text-align: right;">0.2273427</td>
+<td style="text-align: right;">0.2170544</td>
+<td style="text-align: right;">0.2185470</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">MultiArrestFactor ~ PositionType + Season + DayOfWeek</td>
-<td style="text-align: right;">0.224289</td>
-<td style="text-align: right;">0.2304196</td>
+<td style="text-align: right;">0.2170544</td>
+<td style="text-align: right;">0.2200176</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">MultiArrestFactor ~ PositionType + Season + DayOfWeek</td>
-<td style="text-align: right;">0.224289</td>
-<td style="text-align: right;">0.2304196</td>
+<td style="text-align: right;">0.2170544</td>
+<td style="text-align: right;">0.2200176</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">MultiArrestFactor ~ PositionType + Season + DayOfWeek + Conference</td>
-<td style="text-align: right;">0.224289</td>
-<td style="text-align: right;">0.2319580</td>
+<td style="text-align: right;">0.2170544</td>
+<td style="text-align: right;">0.2200176</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">MultiArrestFactor ~ PositionType + Season + DayOfWeek + Conference + Division</td>
-<td style="text-align: right;">0.224289</td>
-<td style="text-align: right;">0.2319580</td>
+<td style="text-align: right;">0.2170544</td>
+<td style="text-align: right;">0.2230026</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">MultiArrestFactor ~ PositionType + Season + DayOfWeek + Conference + Division + TeamCity</td>
-<td style="text-align: right;">0.224289</td>
-<td style="text-align: right;">0.2550350</td>
+<td style="text-align: right;">0.2170544</td>
+<td style="text-align: right;">0.2423178</td>
 </tr>
 </tbody>
 </table>
