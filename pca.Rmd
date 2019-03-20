@@ -1,0 +1,112 @@
+title: PCA musings
+
+```{r }
+library(tidyverse)
+```
+
+Musing about PCA and working through the example from Machine Learning for Hackers.
+
+```{r }
+tbl_prices <- read_csv(
+  file.path('data', 'stock_prices.csv')
+)
+```
+
+The data have one record for each day, for each ticker symbol.
+
+```{r }
+tbl_prices[1, ]
+```
+
+We can spread the data so that we have a column for every ticker. This is reshaping the data so that we are measuring "the market", using 24 different predictors. Alternately, every day is a picture and each stock contributes a value to a pixel in space.
+
+```{r }
+tbl_price_mat <- tbl_prices %>% 
+  filter(Date != as.Date('2001-02-01')) %>% 
+  filter(Stock != 'DDR') %>% 
+  spread(Stock, Close)
+```
+
+We construct a correlation matrix so that we may observe that, yes, the stocks show a good deal of correlation.
+
+```{r }
+mat_cor <- tbl_price_mat %>% 
+  select(-Date) %>% 
+  cor()
+```
+
+Construction of principal components is simply a call to `princomp()`.
+
+```{r }
+fit_pca <- tbl_price_mat %>% 
+  select(-Date) %>% 
+  princomp()
+```
+
+Printing the fit object will give us percentages of variation captured in each component. The values below suggest that half of the variation is captured by the first two principal components. But what the heck does "variation" mean in this context?
+
+```{r }
+fit_pca
+```
+
+To help me see this, I can observe how two symbols relate to one another. Below we're showing a scatter plot of the first two stocks. Clearly positively correlated.
+
+```{r }
+tbl_price_mat %>% 
+  ggplot(aes(ADC, AFL)) + 
+  geom_point()
+```
+
+And what would the principal components look like? First we'll run `prcomp()` to get the principal components. This uses SVD rather than eigenvalues. I'm assuming that's meaningful.
+
+```{r}
+fit_pca_3 <- tbl_price_mat %>% 
+  select(ADC, AFL) %>% 
+  prcomp(scale = TRUE, center = TRUE)
+
+fit_pca_3
+```
+
+Hmm, I had assumed that the standard deviations were meant to sum to 100%, but that's clearly not going to happen in this case. Put a pin in that.
+
+I'm also a bit clueless about how to interprete this. We'll return soon.
+
+Can we visualize this? I'll start by having a look at the predictions.
+
+```{r}
+fit_pca_3 %>% 
+  predict() %>% 
+  head()
+```
+
+OK, that doesn't help. There are some built-in plotting functions. Maybe try one of those?
+
+```{r}
+fit_pca_3 %>% 
+  plot()
+```
+
+Ugh. 
+
+```{r}
+fit_pca_3 %>% 
+  biplot()
+```
+
+OK, a biplot looks a little better. I think we can use the predictions to create something comparable apart from the red arrows. How's this:
+
+```{r}
+tbl_prediction <- predict(fit_pca_3) %>% 
+  as_tibble()
+
+tbl_price_mat <- tbl_price_mat %>% 
+  bind_cols(tbl_prediction)
+
+tbl_price_mat %>% 
+  ggplot(aes(PC1, PC2)) + 
+  geom_point()
+```
+
+That looks ... different, but I think it may jive. No, wait, the scales are way off.
+
+In the `stats` version, there are two scales on the axes. The upper and right axes correspond to the original scale of the data. The other two ... don't. Do I need to go through some effort to get scaled/unscaled predictions?
