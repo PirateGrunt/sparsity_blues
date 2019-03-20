@@ -1,0 +1,130 @@
+---
+title: mushrooms
+---
+
+```{r}
+library(tidyverse)
+library(FactoMineR)
+```
+
+http://blog.ephorie.de/wp-content/uploads/2019/02/mushrooms.csv
+
+```{r}
+tbl_shrooms <- read_csv(file.path('data', 'mushrooms.csv')) %>% 
+  mutate_all(as_factor)
+```
+
+# EDA
+
+```{r}
+tbl_shrooms %>% 
+  summarise_all(n_distinct) %>% 
+  tidyr::gather(variable, distinct_vals) %>%
+  View()
+```
+
+```{r}
+tbl_shrooms <- tbl_shrooms %>% 
+  select(-veil_type)
+```
+
+```{r}
+any_na <- compose(any, is.na)
+
+tbl_shrooms %>% 
+  summarise_all(any_na) %>% 
+  View()
+```
+
+# Marginal
+
+## One dimension
+
+```{r}
+tbl_shrooms %>% 
+  group_by(type, cap_shape) %>% 
+  # group_by(cap_shape) %>% 
+  summarise(n = n()) %>% 
+  group_by(cap_shape) %>% 
+  mutate(n_pct = n / sum(n)) %>%
+  select(-n) %>% 
+  tidyr::spread(type, n_pct) %>% 
+  knitr::kable()
+```
+
+## Two dimensions
+
+```{r}
+tbl_shrooms %>% 
+  mutate(cap_shape_surface = paste(cap_shape, cap_surface, sep = "_")) %>% 
+  group_by(type, cap_shape_surface) %>% 
+  summarise(n = n()) %>% 
+  group_by(cap_shape_surface) %>% 
+  mutate(n_pct = n / sum(n)) %>%
+  select(-n) %>% 
+  tidyr::spread(type, n_pct) %>% 
+  knitr::kable()
+
+```
+
+Convex and scaly is still problematic
+
+```{r}
+tbl_shrooms %>% 
+  group_by(type, cap_surface) %>% 
+  summarise(n = n()) %>% 
+  group_by(cap_surface) %>% 
+  mutate(n_pct = n / sum(n)) %>%
+  select(-n) %>% 
+  tidyr::spread(type, n_pct) %>% 
+  knitr::kable()
+
+```
+
+```{r}
+tbl_shrooms %>% 
+  group_by(type, odor) %>% 
+  summarise(n = n()) %>% 
+  group_by(odor) %>% 
+  mutate(n_pct = n / sum(n)) %>%
+  select(-n) %>% 
+  tidyr::spread(type, n_pct) %>% 
+  knitr::kable()
+```
+
+# ANOVA
+
+```{r}
+
+```
+
+# Prediction
+
+```{r}
+fit_glm <- tbl_shrooms %>% 
+  glm(
+      formula = type ~ 0 + .
+    , family = binomial()
+  )
+
+summary(fit_glm)
+```
+
+
+
+# dimension reduction
+
+## MCA 
+
+```{r}
+mca_shrooms <- tbl_shrooms %>% 
+  select(-type) %>% 
+  MCA(graph = FALSE)
+```
+
+```{r}
+
+```
+
+## Clustering
+
