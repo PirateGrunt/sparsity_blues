@@ -1,0 +1,24 @@
+---
+---
+
+Random thoughts about MCA.
+
+```{r}
+library(tidyverse)
+```
+
+I begin by reading the JStatSoft article about `ca`. I hit trouble almost instantly because I realize that I'm not that familiar with singular value decomposition (SVD).
+
+$$X = UDV'$$
+
+```{r}
+my_matrix <- matrix(1:60, nrow = 5)
+
+mojo <- svd(my_matrix)
+```
+
+```{r}
+library(ca)
+data("smoke")
+```
+
