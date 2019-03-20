@@ -1,0 +1,167 @@
+---
+LDA
+---
+
+```{r}
+library(tidyverse)
+library(tidytext)
+library(gutenbergr)
+library(topicmodels)
+```
+
+```{r}
+data("AssociatedPress")
+```
+
+```{r }
+ap_lda <- AssociatedPress %>% 
+  LDA(k = 3, control = list(seed = 1234))
+```
+
+```{r}
+ap_topics <- ap_lda %>% 
+  tidy()
+
+ap_top_terms <- ap_topics %>% 
+  group_by(topic) %>% 
+  top_n(10, beta) %>% 
+  ungroup() %>% 
+  arrange(topic, -beta)
+```
+
+```{r}
+ap_top_terms %>% 
+  mutate(term = reorder(term, beta)) %>%
+  ggplot(aes(term, beta, fill = factor(topic))) + 
+  geom_col(show.legend = FALSE) +
+  facet_wrap( ~ topic, scales = 'free') +
+  coord_flip()
+```
+
+```{r}
+beta_spread <- ap_topics %>% 
+  top_n(1e3, beta) %>% 
+  mutate(topic = paste0("topic_", topic)) %>% 
+  spread(topic, beta) %>% 
+  # filter(
+  #     topic_1 > .001
+  #   | topic_2 > .001
+  #   | topic_3 > .001) %>%
+  mutate(
+      log_ratio_1_3 = log2(topic_1 / topic_3)
+    , log_ratio_2_3 = log2(topic_2 / topic_3)
+    , log_ratio_1_2 = log2(topic_1 / topic_2)
+  ) %>% 
+  select(term, log_ratio_1_3, log_ratio_2_3, log_ratio_1_2) %>% 
+  gather(topic, log_ratio, -term) %>% 
+  group_by(topic) %>% 
+  top_n(20, abs(log_ratio)) %>% 
+  ungroup()
+```
+
+```{r}
+beta_spread %>% 
+  ggplot(aes(reorder(term, log_ratio), log_ratio, fill = topic)) +
+  geom_col(show.legend = FALSE) +
+  coord_flip() + 
+  facet_wrap(~ topic, scales = 'free') +
+  NULL
+```
+
+```{r}
+ap_documents <- ap_lda %>% 
+  tidy(matrix = 'gamma')
+```
+
+```{r}
+top_topics <- ap_documents %>% 
+  group_by(topic) %>% 
+  top_n(3, gamma)
+```
+
+```{r}
+mojo <- AssociatedPress %>% 
+  tidy() %>% 
+  inner_join(ap_documents)
+
+gonzo <- mojo %>% 
+  group_by(term, topic) %>% 
+  summarise(
+      max_gamma = max(gamma)
+    , mean_gamma = mean(gamma)
+    , median_gamma = median(gamma)
+  )
+```
+
+Topic 1 = domestic
+Topic 2 = politics/international
+Topic 3 = financial
+
+```{r}
+titles <- c(
+    "Twenty Thousand Leagues under the Sea"
+  , "The War of the Worlds"
+  , "Pride and Prejudice"
+  , "Great Expectations"
+)
+
+books <- gutenberg_works(title %in% titles) %>% 
+  gutenberg_download(meta_fields = "title")
+```
+
+```{r}
+reg <- regex("^chapter ", ignore_case = TRUE)
+
+by_chapter <- books %>% 
+  group_by(title) %>% 
+  mutate(
+    chapter = cumsum(str_detect(text, reg))
+  ) %>% 
+  ungroup() %>% 
+  filter(chapter > 0) %>% 
+  unite(document, title, chapter)
+```
+
+```{r }
+by_chapter_word <- by_chapter %>% 
+  unnest_tokens(word, text)
+```
+
+```{r}
+word_counts <- by_chapter_word %>% 
+  anti_join(stop_words) %>% 
+  count(document, word, sort = TRUE) %>% 
+  ungroup()
+```
+
+```{r}
+chapters_dtm <- word_counts %>% 
+  cast_dtm(document, word, n)
+```
+
+```{r}
+chapters_lda <- LDA(chapters_dtm, k = 4, control = list(seed = 1234))
+```
+
+```{r}
+chapters_gamma <- tidy(chapters_lda, matrix = "gamma") %>% 
+  separate(document, c("title", "chapter"), sep = "_", convert = TRUE)
+```
+
+```{r}
+chapters_gamma %>% 
+  mutate(
+    title = reorder(title, gamma * topic)
+  ) %>% 
+  ggplot(aes(factor(topic), gamma)) +
+  geom_boxplot() +
+  facet_wrap(~ title)
+```
+
+```{r}
+chapter_classifications <- chapters_gamma %>% 
+  group_by(title, chapter) %>% 
+  top_n(1, gamma) %>% 
+  ungroup()
+```
+
