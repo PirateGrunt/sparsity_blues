@@ -1,7 +1,7 @@
 ---
 title: Sparsity Blues
 author: "Brian A. Fannin"
-date: March 21, 2018
+date: March 27, 2019
 ---
 
 ```{r setup, include=FALSE}
@@ -158,19 +158,20 @@ get_auc <- function(predict_val, actual_val){
 
 ## N-fold cross validation
 
-```{r}
+```{r error = TRUE}
 set.seed(1234)
 library(modelr)
 tbl_folds <- crossv_kfold(tbl_players, k = 10)
 
-fit <- randomForest::randomForest(
+library(randomForest)
+mojo <- na.roughfix(tbl_folds)
+fit <- randomForest(
     formula = MultiArrest ~ Season + ArrestSeasonState + DayOfWeek
   , data = as.data.frame(tbl_folds$train[[1]])
-  , 
 )
 summary(fit)
 fit
-library(randomForest)
+
 varImpPlot(fit)
 ```
 

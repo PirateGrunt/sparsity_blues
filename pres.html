@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="generator" content="pandoc">
   <meta name="author" content="Brian A. Fannin" />
-  <meta name="dcterms.date" content="2018-03-21" />
+  <meta name="dcterms.date" content="2019-03-27" />
   <title>Sparsity Blues</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -453,18 +453,20 @@ document.getElementsByTagName('head')[0].appendChild(style);
 <section>
     <h1 class="title">Sparsity Blues</h1>
     <h2 class="author">Brian A. Fannin</h2>
-    <h3 class="date">March 21, 2018</h3>
+    <h3 class="date">March 27, 2019</h3>
 </section>
 
 <section><section id="origins" class="titleslide slide level1"><h1>Origins</h1></section><section id="origins-1" class="slide level2">
 <h2>Origins</h2>
-<div class="speaker_notes">
-<p>I gave a talk at SAS last year about using R to communicate with APIs.</p>
-<p>As an afterthought, I fit a model. The fits were not satisfying because the data was largely categorical</p>
-</div>
-</section><section id="nflarrest.com" class="slide level2">
-<h2>nflarrest.com</h2>
-<p><img src="images/nfl_arrest.png" width="686" /></p>
+<ul>
+<li>I gave a talk last year about APIs.</li>
+<li>As an afterthought, I fit a model.</li>
+<li>The fits were not satisfying because the data was largely categorical.</li>
+</ul>
+</section><section id="the-data" class="slide level2">
+<h2>The data</h2>
+<p><img src="images/nfl_arrest.png" /></p>
+<p>nflarrest.com</p>
 </section><section id="before-anyone-gets-carried-away" class="slide level2">
 <h2>Before anyone gets carried away…</h2>
 <p>From nflarrests.com:</p>
@@ -479,8 +481,8 @@ document.getElementsByTagName('head')[0].appendChild(style);
 <li>I’m lazy. Let’s check rate of second arrest.</li>
 <li>This is analogous to Bailey/Simon, credibility of single policy</li>
 </ul>
-</section><section id="two-kinds-of-data" class="slide level2">
-<h2>Two kinds of data</h2>
+</section><section id="there-are-only-2-kinds-of-data" class="slide level2">
+<h2>There are only 2 kinds of data</h2>
 <ul>
 <li>Continuous</li>
 <li>Categorical
@@ -489,8 +491,6 @@ document.getElementsByTagName('head')[0].appendChild(style);
 <li>Unordered</li>
 </ul></li>
 </ul>
-</section><section id="predictors-vs.response" class="slide level2">
-<h2>Predictors vs. response</h2>
 </section><section id="categorical-outcome" class="slide level2">
 <h2>Categorical outcome</h2>
 <ul>
@@ -498,12 +498,11 @@ document.getElementsByTagName('head')[0].appendChild(style);
 <li>Support vector machine</li>
 <li>Tree methods</li>
 </ul>
-</section><section id="categorical-predictor" class="slide level2">
-<h2>Categorical predictor</h2>
-<ul>
-<li>Decision trees</li>
-<li>Naive Bayes</li>
-</ul>
+</section><section id="section" class="slide level2">
+<h2></h2>
+<blockquote>
+<p>What if we had only categorical predictors?</p>
+</blockquote>
 </section></section>
 <section><section id="categorical-data-in-linear-models" class="titleslide slide level1"><h1>Categorical data in linear models</h1></section><section id="how-they-behave" class="slide level2">
 <h2>How they behave</h2>
@@ -518,15 +517,10 @@ document.getElementsByTagName('head')[0].appendChild(style);
 <h2>Penalty</h2>
 <ul>
 <li>Grouped data is looped data</li>
+<li>Handle this with credibility/hierarchical models</li>
 </ul>
-<div class="speaker_notes">
-<p>I want to start off by talking about the differences between categorical and continuous data. Categorical is poisin for continuous predictors. Two (really one) solution is credibility/hierarchical models. This is basically the approach taken by Bailey/Simon in their paper on loss-rating a single driver.</p>
-<p>The example that I’m using has a categorical output. It’d be real cool to show how categorical inputs aren’t that great at being woven into continuous outputs.</p>
-<p>OK. Whatever. Make some displays about the categorical input/output. A few rectangular heatmaps for openers.</p>
-<p>Show what the design matrix really looks like. Equate the category with “one hot” encoding.</p>
-</div>
 </section></section>
-<section><section id="back-to-our-data" class="titleslide slide level1"><h1>Back to our data</h1></section><section id="section" class="slide level2">
+<section><section id="back-to-our-data" class="titleslide slide level1"><h1>Back to our data</h1></section><section id="section-1" class="slide level2">
 <h2></h2>
 <p>Categorical data:</p>
 <ul>
@@ -540,36 +534,71 @@ document.getElementsByTagName('head')[0].appendChild(style);
 <li>Player physical characteristics</li>
 <li>Player salary</li>
 </ul>
-</section><section id="section-1" class="slide level2">
+</section><section id="section-2" class="slide level2">
 <h2></h2>
 <ul>
-<li>Number of players who’ve been arrested: 649</li>
-<li>Number of arrests: 866</li>
+<li>Number of players who’ve been arrested: 673</li>
+<li>Number of arrests: 892</li>
 <li>Number of players w/more than one arrest: 146</li>
 </ul>
 <p>So there is a small probability of having more than one arrest. Compare this to Bailey/Simon probability of second accident.</p>
-</section><section id="section-2" class="slide level2">
+</section><section id="section-3" class="slide level2">
 <h2></h2>
-<p><img src="pres_files/figure-revealjs/unnamed-chunk-4-1.png" width="768" /></p>
-</section><section id="our-performance-metric" class="slide level2">
+<pre><code>## # A tibble: 673 x 1
+## # Groups:   Name [673]
+##    Name           
+##    &lt;chr&gt;          
+##  1 A.J. Jefferson 
+##  2 A.J. Nicholson 
+##  3 Aaron Beasley  
+##  4 Aaron Berry    
+##  5 Aaron Gibson   
+##  6 Aaron Hernandez
+##  7 Aaron Jones    
+##  8 Aaron Neary    
+##  9 Adam Gotsis    
+## 10 Adam Jones     
+## # … with 663 more rows</code></pre>
+</section></section>
+<section><section id="how-well-model" class="titleslide slide level1"><h1>How we’ll model</h1></section><section id="our-performance-metric" class="slide level2">
 <h2>Our performance metric</h2>
 <p>AUC = Area Under the Curve</p>
 </section><section id="define-roc" class="slide level2">
 <h2>Define ROC</h2>
 </section><section id="define-auc" class="slide level2">
 <h2>Define AUC</h2>
+</section><section id="auc-code" class="slide level2">
+<h2>AUC Code</h2>
 </section><section id="n-fold-cross-validation" class="slide level2">
 <h2>N-fold cross validation</h2>
+<pre><code>## Error in na.roughfix.data.frame(tbl_folds): na.roughfix only works for numeric or factor</code></pre>
+<pre><code>## Error in randomForest.default(m, y, ...): NA/NaN/Inf in foreign function call (arg 1)</code></pre>
+<pre><code>## Error in summary(fit): object &#39;fit&#39; not found</code></pre>
+<pre><code>## Error in eval(expr, envir, enclos): object &#39;fit&#39; not found</code></pre>
+<pre><code>## Error in varImpPlot(fit): object &#39;fit&#39; not found</code></pre>
 </section></section>
 <section><section id="a-decision-tree" class="titleslide slide level1"><h1>A decision tree</h1></section><section id="characteristics-of-a-decision-tree" class="slide level2">
 <h2>Characteristics of a decision tree</h2>
 <ul>
 <li>Divides a sample into categories</li>
-<li>The ‘prediction’ is a function of some value within each category</li>
+<li>The ‘prediction’ is a function of some value within each category.</li>
 <li>Membership is assessed by computing some criteria. If a split improves the criteria, then it is made. Forward only, i.e. ‘greedy’.</li>
 <li>Number of levels and other criteria control the size and shape of the tree</li>
 <li>In this case, output is discrete and binary. Continuous response will produce a finite set of predictions.</li>
 </ul>
+</section><section id="section-4" class="slide level2">
+<h2></h2>
+<p><img src="pres_files/figure-revealjs/unnamed-chunk-6-1.png" width="768" /></p>
+</section><section id="fit-a-decision-tree" class="slide level2">
+<h2>Fit a decision tree</h2>
+<p><img src="pres_files/figure-revealjs/unnamed-chunk-7-1.png" width="768" /></p>
+</section><section id="example-node" class="slide level2">
+<h2>Example node</h2>
+<pre><code>## [1] 0.6730117</code></pre>
+</section><section id="section-5" class="slide level2">
+<h2></h2>
+<pre><code>## [1] 0.3819085</code></pre>
+<pre><code>## [1] 0.6591674</code></pre>
 </section><section id="about-the-data" class="slide level2">
 <h2>About the data</h2>
 <ul>
@@ -737,6 +766,11 @@ document.getElementsByTagName('head')[0].appendChild(style);
 </section></section>
 <section><section id="reduced-categorical-dimension" class="titleslide slide level1"><h1>Reduced categorical dimension</h1></section><section id="howd-we-do" class="slide level2">
 <h2>How’d we do?</h2>
+<ul>
+<li>So, results are not awesome.</li>
+<li>Neither is credibility</li>
+<li>Bias/variance tradeoff</li>
+</ul>
 </section></section>
 <section><section id="conclusion" class="titleslide slide level1"><h1>Conclusion</h1></section><section id="thank-you" class="slide level2">
 <h2>Thank you!</h2>
@@ -746,6 +780,9 @@ document.getElementsByTagName('head')[0].appendChild(style);
 <h2>References</h2>
 <ul>
 <li>Mosaic plot</li>
+<li><a href="http://www.gastonsanchez.com/visually-enforced/how-to/2012/10/13/MCA-in-R/" class="uri">http://www.gastonsanchez.com/visually-enforced/how-to/2012/10/13/MCA-in-R/</a></li>
+<li><a href="http://rpubs.com/dgrtwo/cv-modelr" class="uri">http://rpubs.com/dgrtwo/cv-modelr</a></li>
+<li><a href="https://drsimonj.svbtle.com/k-fold-cross-validation-with-modelr-and-broom" class="uri">https://drsimonj.svbtle.com/k-fold-cross-validation-with-modelr-and-broom</a></li>
 </ul>
 </section></section>
     </div>
