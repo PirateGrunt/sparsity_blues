@@ -1,0 +1,842 @@
+---
+title: Sparsity Blues
+author: "Brian A. Fannin"
+date: March 21, 2018
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+    echo = TRUE
+  , warning = FALSE
+  , message = FALSE
+  , collapse = TRUE
+)
+
+library(tidyverse)
+```
+
+## Overview
+
+* Where did this talk come from?
+* Categorical vs continuous data
+* Naive Bayes
+* Decision trees
+* Multiple Correspondance Analysis
+* Let's model!
+
+# Origins
+
+## Origins
+
+* I gave a [talk](https://github.com/PirateGrunt/ape4apis) last year about APIs.
+* As an afterthought, I tried to fit a model. 
+* The fits were challenging because the data was largely categorical.
+
+## The data
+
+```{r echo=FALSE, out.height = '600px'}
+load('./data/nfl_data.rda')
+knitr::include_graphics('images/nfl_arrest.png')
+```
+
+
+## Before anyone gets carried away...
+
+From nflarrests.com:
+
+> Keep in mind there are 1700 NFL Players and their arrest rates are lower than the USA arrest rate.
+
+Also: arrest != conviction
+
+## What I tried to measure
+
+I tried to measure whether a player would get a second arrest.
+
+* Rate of 1st arrest requires player statistics for each season, which means a second source.
+* I'm lazy. Let's check rate of second arrest.
+
+## Just the basic facts
+
+```{r echo = FALSE}
+prob_multi_arrest <- sum(tbl_players$MultiArrest) / nrow(tbl_players)
+```
+
+* Number of players who've been arrested: `r nrow(tbl_players)`
+* Number of players w/more than one arrest: `r sum(tbl_players$MultiArrest)`
+* Probability of second arrest: `r scales::percent(prob_multi_arrest)`
+
+So there is a small probability of having more than one arrest. Compare this to Bailey/Simon probability of second accident.
+
+# Categorical vs continuous data
+
+## There are only 2 kinds of data
+
+* Continuous
+* Categorical
+    * Ordinal
+    * Unordered
+* OK, three would be a mixed distribution (zero-inflated, etc.)
+
+Outcomes (for supervised learning) are either categorical or continuous (classification or regression).
+
+## Categorical data
+
+* Gender
+* Smoking
+* Safe driver program
+* Drug testing policy
+* ...
+
+Basically anything to which you could apply a schedule mod. And also:
+
+* Class code
+* Territory
+* Zip code
+
+And those are just the ones that might be in a rating manual.
+
+## Continuous outcome
+
+<div class='left'>
+```{r echo=TRUE}
+sims <- 1e3
+tbl_linear <- tibble(
+    x = runif(sims, 0, 10)
+  , e = rnorm(sims, sd = 5)
+) %>% 
+  mutate(
+    y = 1.5 + 2 * x + e
+  )
+```
+</div>
+
+<div class='right'>
+```{r echo=FALSE}
+tbl_linear %>% 
+  ggplot(aes(x, y)) + 
+  geom_point()
+```
+</div>
+
+## Categorical outcome
+
+* Logistic regression
+* Support vector machine
+* Tree methods
+
+## Categorical outcome
+
+<div class='left'>
+```{r echo=TRUE}
+tbl_logistic <- tbl_linear %>% 
+  mutate(
+      e = rlogis(1e3)
+    , latent = -7.5 + 2 * x + e
+    , y = as.integer(latent > 0)
+  )
+```
+</div>
+
+<div class='right'>
+```{r echo=FALSE}
+tbl_logistic %>% 
+  ggplot(aes(x, y)) + 
+  geom_point() + 
+  geom_smooth(method = glm,  method.args = list(family = "binomial"))
+```
+</div>
+
+## Categorical predictors in a linear model
+
+```{r echo=TRUE}
+set.seed(1234)
+tbl_one_cat <- function(cat_label = 'a', sims = 1e3) {
+  slope <- rnorm(1, 2, 2)
+  intercept <- rnorm(1, 0, 10)
+  tibble(
+    x = runif(sims, 0, 10)
+  , e = rnorm(sims, sd = 5)
+  , category = rep(cat_label, sims)
+) %>% 
+  mutate(
+    y = intercept + slope * x + e
+  )
+}
+
+tbl_cat <- map_dfr(letters[1:5], tbl_one_cat)
+```
+
+## Different intercepts
+
+```{r echo=FALSE}
+fit_diff_slope <- lm(y ~ 0 + category + x, data = tbl_cat)
+plt <- tbl_cat %>% 
+  mutate(pred = predict(fit_diff_slope)) %>% 
+  ggplot(aes(x, y)) + 
+  geom_point(alpha = 0.4) + 
+  geom_line(aes(y = pred, color = category), size = 2)
+plt
+```
+
+## Different slopes
+
+```{r echo=FALSE}
+fit_interaction <- lm(y ~ 1 + x:category, data = tbl_cat)
+plt <- tbl_cat %>% 
+  mutate(pred = predict(fit_interaction)) %>% 
+  ggplot(aes(x, y)) + 
+  geom_point(alpha = 0.4) + 
+  geom_line(aes(y = pred, color = category), size = 2)
+plt
+```
+
+## Or both
+
+```{r echo=FALSE}
+plt <- tbl_cat %>% 
+  ggplot(aes(x, y)) + 
+  geom_point(alpha = 0.4) + 
+  geom_smooth(method = lm, aes(color = category), size = 2)
+plt
+```
+
+## Issues
+
+* Grouped data is looped data
+* Handle this with credibility/hierarchical models
+* What if we _only_ have categorical predictors?
+
+## The design matrix
+
+```{r echo=FALSE}
+fit_both <- lm(y ~ 0 + category + x:category, data = tbl_cat)
+mojo <- fit_both %>% 
+  model.matrix()
+mojo[, 1:8]%>% 
+  head(10) %>% 
+  knitr::kable()
+```
+
+## 
+
+Let's try some non-linear methods
+
+# Naive Bayes
+
+## Bayes
+
+$$Pr(Y=y|X=x)=\frac{Pr(Y = y) * Pr(X=x|Y=y)}{Pr(X=x)}$$
+
+## Fit
+
+```{r}
+library(naivebayes)
+
+fit_nb <- naive_bayes(
+    formula = MultiArrest ~ PositionType
+  , data = tbl_players
+)
+```
+
+```{r echo=FALSE}
+fit_nb
+# predict(fit_nb, type = 'prob')[1, ]
+```
+
+## Can we work that out manually?
+
+```{r }
+prior_y <- sum(tbl_players$MultiArrest) / nrow(tbl_players)
+prob_x <- sum(tbl_players$PositionType == 'D') / nrow(tbl_players)
+tbl_cond <- tbl_players %>% filter(MultiArrest)
+prob_x_cond <- sum(tbl_cond$PositionType == 'D') / nrow(tbl_cond)
+prior_y * prob_x_cond / prob_x
+predict(fit_nb, type = 'prob')[1, 'TRUE']
+
+prior_y
+```
+
+## Two categories
+
+One:
+
+$$Pr(Y=y|X=x)=\frac{Pr(Y = y) * Pr(X=x|Y=y)}{Pr(X=x)}$$
+
+Two:
+
+$$Pr(Y=y|X=x, Z=z)$$
+
+$$=\frac{Pr(Y = y) * Pr(X=x|Y=y) * Pr(Z=z|Y=y)}{Pr(X=x) * Pr(Z=z)}$$
+
+## How about a lot of categories?
+
+```{r}
+fit_nb <- naive_bayes(
+    formula = MultiArrest ~ TeamAbbr + Conference + Division + Position 
+        + PositionType + Encounter + CrimeCategory + ArrestSeasonState 
+    + DayOfWeek
+  , data = tbl_players
+)
+```
+
+## How do our players look?
+
+```{r echo=FALSE}
+tbl_players %>% 
+  mutate(MultiArrestPred = predict(fit_nb, type = 'prob')[, 'TRUE']) %>% 
+  arrange(desc(MultiArrestPred)) %>% 
+  select(MultiArrestPred) %>% 
+  ggplot(aes(MultiArrestPred)) + 
+  geom_histogram(binwidth = .02) + 
+  geom_vline(xintercept = prob_multi_arrest, color = 'red')
+```
+
+## Naive Bayes
+
+* Often used in text processing
+* Great for a sparse matrix
+* It is 'naive' because we assume independence between categories
+
+# A decision tree
+
+## Characteristics of a decision tree
+
+* Divides a sample into regions/subsets
+* The 'prediction' is a function (usually the mean) of some value within each category
+* Membership is assessed by computing some measure of fit. If a split improves the criteria, then it is made. 
+* Forward only, 'greedy'
+* Number of levels and other criteria control the size and shape of the tree
+
+## Measures of fit
+
+For regression:
+
+* Construct regions which minimize residual sum of squares
+
+For classification:
+
+* Construct regions which maximize homogeneity
+
+## Linear fit
+
+```{r}
+library(tree)
+fit_tree <- tree::tree(formula = y ~ x, data = tbl_linear)
+summary(fit_tree)
+```
+
+## 
+
+```{r echo=FALSE}
+tbl_linear <- tbl_linear %>% 
+  mutate(prediction = predict(fit_tree))
+
+tbl_linear %>% 
+  ggplot(aes(x)) + 
+  geom_point(aes(y = y), alpha = 0.5) + 
+  geom_point(aes(y = prediction), color = 'red')
+```
+
+## Categorical fit
+
+```{r echo=FALSE}
+tbl_toy <- tibble(
+    a = c('red', 'red', 'red', 'blue', 'blue')
+  , b = c('black', 'white', 'black', 'white', 'black')
+  , output = c(1, 1, 0, 0, 0)
+)
+
+tbl_toy %>% 
+  knitr::kable()
+```
+
+## Two measures of homogeneity
+
+$$Gini = \sum{p*(1-p)}$$
+
+$$Entropy = -\sum{p*log(p)}$$
+
+## Measure total entropy
+
+```{r }
+entropy <- function(y) {
+  tbl <- tibble(y) %>% 
+    group_by(y) %>% 
+    summarise(prob = n()) %>% 
+    mutate(
+        prob = prob / sum(prob)
+      , ent = -prob * log(prob))
+  
+  tbl$ent %>% sum()
+}
+```
+
+## Measure entropy post-split
+
+```{r}
+entropy_post <- function(tbl, out_col, split_col) {
+  
+  split_col <- enquo(split_col)
+  out_col <- enquo(out_col)
+  
+  tbl %>% 
+    group_by(!! split_col) %>% 
+    summarise(
+        ent = entropy(!! out_col)
+      , group_pct = n() / nrow(tbl)
+    ) %>%
+    ungroup() %>%
+    summarise(
+      ent_post = sum(ent * group_pct)
+    ) %>%
+    pull(ent_post)
+}
+```
+
+## Which column works better on our toy data?
+
+<div class='left'>
+```{r }
+entropy(tbl_toy$output)
+
+tbl_toy %>% 
+  entropy_post(output, a)
+
+tbl_toy %>% 
+  entropy_post(output, b)
+```
+</div>
+
+<div class='right'>
+```{r echo=FALSE, results='asis'}
+tbl_toy %>% 
+  knitr::kable(format = 'html')
+```
+</div>
+
+## Potential node splits
+
+```{r }
+entropy(tbl_players$MultiArrestNum)
+tbl_players %>% 
+  entropy_post(MultiArrestNum, PositionType)
+
+tbl_players %>% 
+  entropy_post(MultiArrestNum, Season)
+
+tbl_players %>% 
+  entropy_post(MultiArrestNum, ArrestSeasonState)
+```
+
+## What splits?
+
+```{r }
+library(rpart)
+
+fit_tree <- tree(
+    data = tbl_players
+  , formula = MultiArrestFactor ~ PositionType + Season + ArrestSeasonState)
+
+summary(fit_tree)
+```
+
+## Plot the tree
+
+```{r}
+plot(fit_tree)
+text(fit_tree, pretty = 0)
+```
+
+## Note
+
+1. Full disclosure: I used both `rpart` and `tree` for the fit. For reasons that I've not yet debugged, `rpart` gave me no nodes.
+2. A package's insistence on using factors may cause you to lose your mind.
+
+## Bagging/random forests
+
+* Avoid overfit by bootstrapping
+* Fit hundreds of resampled trees
+* Take the average of results
+* We don't get that sweet tree plot
+
+## Random forest
+
+```{r}
+library(randomForest)
+fit_forest <- randomForest(
+    formula = MultiArrestFactor ~ PositionType + Season + ArrestSeasonState
+  , data = tbl_players
+)
+```
+
+## Variable importance
+
+```{r fig.height = 4}
+varImpPlot(fit_forest)
+```
+
+# Multiple Correspondence Analysis
+
+## What is MCA?
+
+* PCA, but for categories
+* CA, but for multiple variables
+
+## Why MCA?
+
+* Dimensionality reduction
+* Could also consider (hierarchical) cluster analysis
+* Others?
+
+## How does it work?
+
+* Candidly, I can't easily explain it.
+* Creates a "complete disjunctive table", i.e. a "one hot encoding" table
+* This creates points in a high-dimensional space
+* Synthesizes new dimensions which capture the most variance between the points
+
+## Complete disjunctive table
+
+```{r echo = FALSE}
+tbl_toy_mca <- tibble(
+    id = 1:4
+  , metro = c('urban', 'urban', 'rural', 'urban') %>% as_factor()
+  , region = c('north', 'south', 'east', 'north') %>% as_factor()
+)
+tbl_toy_mca %>%
+  knitr::kable()
+```
+
+## CDT, or "one-hot encoding"
+
+```{r results='asis'}
+tbl_toy_mca_one_hot <- tbl_toy_mca %>%
+  gather(category, value, -id) %>%
+  unite(cdt, -id) %>%
+  mutate(count = 1L) %>%
+  tidyr::spread(cdt, count, fill = 0L)
+
+tbl_toy_mca_one_hot %>% knitr::kable()
+```
+
+<!-- ## Two categories = Five dimensions -->
+
+<!-- ```{r} -->
+<!-- tbl_toy_mca_one_hot %>% knitr::kable() -->
+<!-- ``` -->
+
+## Extract data for processing
+
+```{r }
+tbl_cats <- tbl_players %>% 
+  ungroup() %>% 
+  select(
+      CrimeCategory, ArrestSeasonState, Conference
+    , Division, DayOfWeek, Outcome, Position, PositionType
+    , Season) %>% 
+  mutate_if(is.character, as.factor)
+
+library(FactoMineR)
+fit_mca <- MCA(tbl_cats, graph = FALSE)
+```
+
+## Visualize in the reduced dimensions
+
+```{r echo = FALSE}
+tbl_players <- tbl_players %>% 
+  ungroup() %>% 
+  mutate(
+    dim_1 = fit_mca$ind$coord[, 1]
+    , dim_2 = fit_mca$ind$coord[, 2]
+  )
+
+tbl_players %>% 
+  ggplot(aes(dim_1, dim_2), size = 2, alpha = 0.7) + 
+  geom_point(aes(color = PositionType))
+```
+
+## MCA: categorical -> continuous
+
+```{r echo=FALSE, results='asis'}
+fit_logistic_mca <- glm(
+  MultiArrestNum ~ 0 + dim_1 + dim_2
+  , data = tbl_players
+  , family = binomial())
+
+fit_logistic_mca %>% 
+  summary()
+```
+
+# Let's model!
+
+## How we'll model
+
+1. Pick a performance measure
+1. Setup cross-validation
+1. Train some models
+3. Measure performance
+
+## Our performance measure
+
+Misclassification rate
+
+Other options:
+
+* True positive rate
+* False positive rate
+* Other confusion matrix metrics
+* Area under the curve (AUC): A number close to 1 is good
+
+## Measures
+
+```{r}
+misclass <- function(tbl_test, fit_obj) {
+  tbl_test <- tbl_test %>% 
+    mutate(
+        pred = predict(fit_obj, type = 'class', newdata = tbl_test)
+      , misclass = pred != MultiArrestFactor
+    )
+  sum(tbl_test$misclass) / nrow(tbl_test)
+}
+```
+
+## N-fold cross validation
+
+```{r}
+library(modelr)
+set.seed(1234)
+tbl_folds <- crossv_kfold(tbl_players, k = 10)
+```
+
+## `tbl_folds`
+
+```{r}
+tbl_folds %>% head()
+```
+
+## What's in tbl_folds?
+
+* Each row in the tibble holds:
+  * a training `resample` object
+  * a test `resample` object
+  * an id
+  
+A `resample` object is a list which contains a data frame and a vector of row indices.
+
+```{r}
+tbl_folds$train[[1]] %>% class()
+```
+
+## Assess one fold
+
+```{r}
+assess_fold <- function(obj_train, obj_test, method, the_formula) {
+  tbl_train <- obj_train %>% as.data.frame()
+  tbl_test <- obj_test %>% as.data.frame()
+  
+  fit <- do.call(
+      method
+    , args = list(formula = the_formula, data = tbl_train))
+  
+  misclass(tbl_test, fit)
+
+}
+
+one_fold_misclass <- assess_fold(
+    tbl_folds$train[[1]]
+  , tbl_folds$test[[1]]
+  , tree::tree
+  , as.formula('MultiArrestFactor ~ PositionType + Season'))
+```
+
+## Assess all folds
+
+```{r}
+cross_validate <- function(formula, tbl_folds, method) {
+  map2_dbl(
+    tbl_folds$train
+  , tbl_folds$test
+  , assess_fold
+  , method
+  , formula
+  ) %>% mean()
+}
+
+misclasses <- cross_validate(
+    as.formula('MultiArrestFactor ~ PositionType + Season')
+  , tbl_folds
+  , tree::tree
+)
+
+misclasses <- cross_validate(
+    as.formula('MultiArrestFactor ~ PositionType + Season')
+  , tbl_folds
+  , naive_bayes
+)
+```
+
+## Make formulas
+
+```{r}
+make_formula <- function(predictors, target, intercept = TRUE) {
+  str_predictors <- paste(predictors, collapse = '+')
+  if (intercept) {
+    str_formula <- paste(target, '~ 1 + ')
+  } else {
+    str_formula <- paste(target, '~')
+  }
+  
+  str_formula <- paste(str_formula, str_predictors)
+  as.formula(str_formula)
+}
+```
+
+## A few formulas
+
+```{r}
+the_formulas <- list(
+      c('PositionType', 'Season')
+    , c('PositionType', 'Season', 'DayOfWeek')
+    , c('PositionType', 'Season', 'DayOfWeek')
+    , c('PositionType', 'Season', 'DayOfWeek', 'Conference')
+    , c('PositionType', 'Season', 'DayOfWeek', 'Conference', 'Division')
+    , c('PositionType', 'Season', 'DayOfWeek', 'Conference', 'Division', 'TeamCity')
+  ) %>% 
+  map(make_formula, 'MultiArrestFactor', intercept = FALSE) %>% 
+  as.vector()
+
+tbl_models <- tibble(
+  formula = the_formulas
+)
+```
+
+## Our models tibble
+
+```{r echo=FALSE}
+tbl_models %>% 
+  knitr::kable()
+```
+
+## Assess all folds, all formulas, all models
+
+```{r eval=TRUE}
+tbl_models <- tbl_models %>%
+  mutate(
+      misclass_tree = map_dbl(formula, cross_validate, tbl_folds, tree::tree)
+    , misclass_nb = map_dbl(formula, cross_validate, tbl_folds, naive_bayes)
+  )
+```
+
+##
+
+```{r echo=FALSE}
+tbl_models %>% 
+  knitr::kable()
+```
+
+
+# Conclusion
+
+## What did we learn Charlie Brown?
+
+* Categorical data is ubiquitous, but tricky to model
+* Non-linear approaches like tree-based methods and Naive Bayes look at categorical differently
+* MCA can address "curse of dimensionality" with categorical data
+* Let's all keep doing this! Fitting categorical data is hard. Research is light.
+
+##
+
+Slides may be found here:
+
+http://pirategrunt.com/sparsity_blues/#/
+
+All of the code - even stuff you didn't see - is on GitHub
+
+https://github.com/pirategrunt
+
+## Thank you!
+
+## Q&A
+
+## References
+
+* http://www.gastonsanchez.com/visually-enforced/how-to/2012/10/13/MCA-in-R/
+* http://rpubs.com/dgrtwo/cv-modelr
+* https://drsimonj.svbtle.com/k-fold-cross-validation-with-modelr-and-broom
+* http://www.casact.org/pubs/forum/09wforum/flynn_francis.pdf
+
+<!-- # Back to our data -->
+
+<!-- ##  -->
+
+<!-- Categorical data: -->
+
+<!-- * Position -> offense/defense/special teams -->
+<!-- * Team -> AFC/NFC -->
+<!-- * City -->
+
+<!-- Continuous: -->
+
+<!-- * Player stats -->
+<!-- * Player physical characteristics -->
+<!-- * Player salary -->
+<!-- ```{r} -->
+<!-- summarize_category <- function(tbl, category){ -->
+<!--   tbl <- tbl[, c('MultiArrestNum', category)] -->
+<!--   names(tbl)[2] <- 'Category' -->
+
+<!--   tbl <- tbl %>% -->
+<!--     group_by(Category) %>%  -->
+<!--     summarize( -->
+<!--       MultiArrest = sum(MultiArrestNum, na.rm = TRUE) -->
+<!--       , N = n() -->
+<!--       ) %>% -->
+<!--     mutate(MultiArrestPct = MultiArrest / N) -->
+
+<!--   tbl -->
+<!-- } -->
+
+<!-- mojo <- summarize_category(tbl_players, 'ArrestSeasonState') -->
+
+<!-- tbl_players %>%  -->
+<!--   select() -->
+<!-- ``` -->
+
+<!-- ## -->
+
+<!-- ```{r} -->
+<!-- library(ROCR) -->
+<!-- actuals <- c(1, 0, 1, 0, 1) -->
+<!-- all_wrong <- ifelse(!actuals, 1, 0) -->
+<!-- all_right <- actuals -->
+<!-- some_right <- c(1, 1, 1, 0, 0) -->
+<!-- pred <- prediction(all_right, actuals) -->
+<!-- perf <- performance(pred, measure = "tpr", x.measure = "fpr")  -->
+<!-- plot(perf, col = rainbow(10)) -->
+<!-- ``` -->
+
+<!-- ## -->
+
+<!-- ```{r} -->
+<!-- pred <- prediction(all_wrong, actuals) -->
+<!-- perf <- performance(pred, measure = "tpr", x.measure = "fpr")  -->
+<!-- plot(perf, col = rainbow(10)) -->
+<!-- ``` -->
+
+<!-- ## -->
+
+<!-- ```{r} -->
+<!-- pred <- prediction(some_right, actuals) -->
+<!-- perf <- performance(pred, measure = "tpr", x.measure = "fpr")  -->
+<!-- plot(perf, col = rainbow(10)) -->
+<!-- ``` -->
+
+<!-- ## AUC Code -->
+
+<!-- ```{r} -->
+<!-- get_auc <- function(predict_val, actual_val){ -->
+<!--   pred <- prediction(predict_val, actual_val) -->
+<!--   perf <- performance(pred, 'auc') -->
+<!--   as.numeric(perf@y.values) -->
+<!-- } -->
+<!-- ``` -->

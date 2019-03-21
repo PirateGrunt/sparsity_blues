@@ -1,0 +1,1570 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="pandoc">
+  <meta name="author" content="Brian A. Fannin" />
+  <meta name="dcterms.date" content="2018-03-21" />
+  <title>Sparsity Blues</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+  <link rel="stylesheet" href="index_files/reveal.js-3.3.0.1/css/reveal.css"/>
+
+
+<style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+</style>
+
+<link rel="stylesheet" href="index_files/reveal.js-3.3.0.1/css/theme/solarized.css" id="theme">
+
+
+  <!-- some tweaks to reveal css -->
+  <style type="text/css">
+    .reveal h1 { font-size: 2.0em; }
+    .reveal h2 { font-size: 1.5em;  }
+    .reveal h3 { font-size: 1.25em;	}
+    .reveal h4 { font-size: 1em;	}
+
+    .reveal .slides>section,
+    .reveal .slides>section>section {
+      padding: 0px 0px;
+    }
+
+
+
+    .reveal table {
+      border-width: 1px;
+      border-spacing: 2px;
+      border-style: dotted;
+      border-color: gray;
+      border-collapse: collapse;
+      font-size: 0.7em;
+    }
+
+    .reveal table th {
+      border-width: 1px;
+      padding-left: 10px;
+      padding-right: 25px;
+      font-weight: bold;
+      border-style: dotted;
+      border-color: gray;
+    }
+
+    .reveal table td {
+      border-width: 1px;
+      padding-left: 10px;
+      padding-right: 25px;
+      border-style: dotted;
+      border-color: gray;
+    }
+
+
+  </style>
+
+    <style type="text/css">code{white-space: pre;}</style>
+
+    <link rel="stylesheet" href="css/revealOpts.css"/>
+
+<!-- Printing and PDF exports -->
+<script id="paper-css" type="application/dynamic-css">
+
+/* Default Print Stylesheet Template
+   by Rob Glazebrook of CSSnewbie.com
+   Last Updated: June 4, 2008
+
+   Feel free (nay, compelled) to edit, append, and
+   manipulate this file as you see fit. */
+
+
+@media print {
+
+	/* SECTION 1: Set default width, margin, float, and
+	   background. This prevents elements from extending
+	   beyond the edge of the printed page, and prevents
+	   unnecessary background images from printing */
+	html {
+		background: #fff;
+		width: auto;
+		height: auto;
+		overflow: visible;
+	}
+	body {
+		background: #fff;
+		font-size: 20pt;
+		width: auto;
+		height: auto;
+		border: 0;
+		margin: 0 5%;
+		padding: 0;
+		overflow: visible;
+		float: none !important;
+	}
+
+	/* SECTION 2: Remove any elements not needed in print.
+	   This would include navigation, ads, sidebars, etc. */
+	.nestedarrow,
+	.controls,
+	.fork-reveal,
+	.share-reveal,
+	.state-background,
+	.reveal .progress,
+	.reveal .backgrounds {
+		display: none !important;
+	}
+
+	/* SECTION 3: Set body font face, size, and color.
+	   Consider using a serif font for readability. */
+	body, p, td, li, div {
+		font-size: 20pt!important;
+		font-family: Georgia, "Times New Roman", Times, serif !important;
+		color: #000;
+	}
+
+	/* SECTION 4: Set heading font face, sizes, and color.
+	   Differentiate your headings from your body text.
+	   Perhaps use a large sans-serif for distinction. */
+	h1,h2,h3,h4,h5,h6 {
+		color: #000!important;
+		height: auto;
+		line-height: normal;
+		font-family: Georgia, "Times New Roman", Times, serif !important;
+		text-shadow: 0 0 0 #000 !important;
+		text-align: left;
+		letter-spacing: normal;
+	}
+	/* Need to reduce the size of the fonts for printing */
+	h1 { font-size: 28pt !important;  }
+	h2 { font-size: 24pt !important; }
+	h3 { font-size: 22pt !important; }
+	h4 { font-size: 22pt !important; font-variant: small-caps; }
+	h5 { font-size: 21pt !important; }
+	h6 { font-size: 20pt !important; font-style: italic; }
+
+	/* SECTION 5: Make hyperlinks more usable.
+	   Ensure links are underlined, and consider appending
+	   the URL to the end of the link for usability. */
+	a:link,
+	a:visited {
+		color: #000 !important;
+		font-weight: bold;
+		text-decoration: underline;
+	}
+	/*
+	.reveal a:link:after,
+	.reveal a:visited:after {
+		content: " (" attr(href) ") ";
+		color: #222 !important;
+		font-size: 90%;
+	}
+	*/
+
+
+	/* SECTION 6: more reveal.js specific additions by @skypanther */
+	ul, ol, div, p {
+		visibility: visible;
+		position: static;
+		width: auto;
+		height: auto;
+		display: block;
+		overflow: visible;
+		margin: 0;
+		text-align: left !important;
+	}
+	.reveal pre,
+	.reveal table {
+		margin-left: 0;
+		margin-right: 0;
+	}
+	.reveal pre code {
+		padding: 20px;
+		border: 1px solid #ddd;
+	}
+	.reveal blockquote {
+		margin: 20px 0;
+	}
+	.reveal .slides {
+		position: static !important;
+		width: auto !important;
+		height: auto !important;
+
+		left: 0 !important;
+		top: 0 !important;
+		margin-left: 0 !important;
+		margin-top: 0 !important;
+		padding: 0 !important;
+		zoom: 1 !important;
+
+		overflow: visible !important;
+		display: block !important;
+
+		text-align: left !important;
+		-webkit-perspective: none;
+		   -moz-perspective: none;
+		    -ms-perspective: none;
+		        perspective: none;
+
+		-webkit-perspective-origin: 50% 50%;
+		   -moz-perspective-origin: 50% 50%;
+		    -ms-perspective-origin: 50% 50%;
+		        perspective-origin: 50% 50%;
+	}
+	.reveal .slides section {
+		visibility: visible !important;
+		position: static !important;
+		width: auto !important;
+		height: auto !important;
+		display: block !important;
+		overflow: visible !important;
+
+		left: 0 !important;
+		top: 0 !important;
+		margin-left: 0 !important;
+		margin-top: 0 !important;
+		padding: 60px 20px !important;
+		z-index: auto !important;
+
+		opacity: 1 !important;
+
+		page-break-after: always !important;
+
+		-webkit-transform-style: flat !important;
+		   -moz-transform-style: flat !important;
+		    -ms-transform-style: flat !important;
+		        transform-style: flat !important;
+
+		-webkit-transform: none !important;
+		   -moz-transform: none !important;
+		    -ms-transform: none !important;
+		        transform: none !important;
+
+		-webkit-transition: none !important;
+		   -moz-transition: none !important;
+		    -ms-transition: none !important;
+		        transition: none !important;
+	}
+	.reveal .slides section.stack {
+		padding: 0 !important;
+	}
+	.reveal section:last-of-type {
+		page-break-after: avoid !important;
+	}
+	.reveal section .fragment {
+		opacity: 1 !important;
+		visibility: visible !important;
+
+		-webkit-transform: none !important;
+		   -moz-transform: none !important;
+		    -ms-transform: none !important;
+		        transform: none !important;
+	}
+	.reveal section img {
+		display: block;
+		margin: 15px 0px;
+		background: rgba(255,255,255,1);
+		border: 1px solid #666;
+		box-shadow: none;
+	}
+
+	.reveal section small {
+		font-size: 0.8em;
+	}
+
+}  
+</script>
+
+
+<script id="pdf-css" type="application/dynamic-css">
+    
+/**
+ * This stylesheet is used to print reveal.js
+ * presentations to PDF.
+ *
+ * https://github.com/hakimel/reveal.js#pdf-export
+ */
+
+* {
+	-webkit-print-color-adjust: exact;
+}
+
+body {
+	margin: 0 auto !important;
+	border: 0;
+	padding: 0;
+	float: none !important;
+	overflow: visible;
+}
+
+html {
+	width: 100%;
+	height: 100%;
+	overflow: visible;
+}
+
+/* Remove any elements not needed in print. */
+.nestedarrow,
+.reveal .controls,
+.reveal .progress,
+.reveal .playback,
+.reveal.overview,
+.fork-reveal,
+.share-reveal,
+.state-background {
+	display: none !important;
+}
+
+h1, h2, h3, h4, h5, h6 {
+	text-shadow: 0 0 0 #000 !important;
+}
+
+.reveal pre code {
+	overflow: hidden !important;
+	font-family: Courier, 'Courier New', monospace !important;
+}
+
+ul, ol, div, p {
+	visibility: visible;
+	position: static;
+	width: auto;
+	height: auto;
+	display: block;
+	overflow: visible;
+	margin: auto;
+}
+.reveal {
+	width: auto !important;
+	height: auto !important;
+	overflow: hidden !important;
+}
+.reveal .slides {
+	position: static;
+	width: 100%;
+	height: auto;
+
+	left: auto;
+	top: auto;
+	margin: 0 !important;
+	padding: 0 !important;
+
+	overflow: visible;
+	display: block;
+
+	-webkit-perspective: none;
+	   -moz-perspective: none;
+	    -ms-perspective: none;
+	        perspective: none;
+
+	-webkit-perspective-origin: 50% 50%; /* there isn't a none/auto value but 50-50 is the default */
+	   -moz-perspective-origin: 50% 50%;
+	    -ms-perspective-origin: 50% 50%;
+	        perspective-origin: 50% 50%;
+}
+
+.reveal .slides section {
+	page-break-after: always !important;
+
+	visibility: visible !important;
+	position: relative !important;
+	display: block !important;
+	position: relative !important;
+
+	margin: 0 !important;
+	padding: 0 !important;
+	box-sizing: border-box !important;
+	min-height: 1px;
+
+	opacity: 1 !important;
+
+	-webkit-transform-style: flat !important;
+	   -moz-transform-style: flat !important;
+	    -ms-transform-style: flat !important;
+	        transform-style: flat !important;
+
+	-webkit-transform: none !important;
+	   -moz-transform: none !important;
+	    -ms-transform: none !important;
+	        transform: none !important;
+}
+
+.reveal section.stack {
+	margin: 0 !important;
+	padding: 0 !important;
+	page-break-after: avoid !important;
+	height: auto !important;
+	min-height: auto !important;
+}
+
+.reveal img {
+	box-shadow: none;
+}
+
+.reveal .roll {
+	overflow: visible;
+	line-height: 1em;
+}
+
+/* Slide backgrounds are placed inside of their slide when exporting to PDF */
+.reveal section .slide-background {
+	display: block !important;
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	z-index: -1;
+}
+
+/* All elements should be above the slide-background */
+.reveal section>* {
+	position: relative;
+	z-index: 1;
+}
+
+/* Display slide speaker notes when 'showNotes' is enabled */
+.reveal .speaker-notes-pdf {
+	display: block;
+	width: 100%;
+	max-height: none;
+	left: auto;
+	top: auto;
+	z-index: 100;
+}
+
+/* Display slide numbers when 'slideNumber' is enabled */
+.reveal .slide-number-pdf {
+	display: block;
+	position: absolute;
+	font-size: 14px;
+}
+
+</script>
+
+
+<script>
+var style = document.createElement( 'style' );
+style.type = 'text/css';
+var style_script_id = window.location.search.match( /print-pdf/gi ) ? 'pdf-css' : 'paper-css';
+var style_script = document.getElementById(style_script_id).text;
+style.innerHTML = style_script;
+document.getElementsByTagName('head')[0].appendChild(style);
+</script>
+
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+<section>
+    <h1 class="title">Sparsity Blues</h1>
+    <h2 class="author">Brian A. Fannin</h2>
+    <h3 class="date">March 21, 2018</h3>
+</section>
+
+<section id="overview" class="slide level2">
+<h2>Overview</h2>
+<ul>
+<li>Where did this talk come from?</li>
+<li>Categorical vs continuous data</li>
+<li>Naive Bayes</li>
+<li>Decision trees</li>
+<li>Multiple Correspondance Analysis</li>
+<li>Let’s model!</li>
+</ul>
+</section>
+<section><section id="origins" class="titleslide slide level1"><h1>Origins</h1></section><section id="origins-1" class="slide level2">
+<h2>Origins</h2>
+<ul>
+<li>I gave a <a href="https://github.com/PirateGrunt/ape4apis">talk</a> last year about APIs.</li>
+<li>As an afterthought, I tried to fit a model.</li>
+<li>The fits were challenging because the data was largely categorical.</li>
+</ul>
+</section><section id="the-data" class="slide level2">
+<h2>The data</h2>
+<p><img src="images/nfl_arrest.png" width="686" height="600px" /></p>
+</section><section id="before-anyone-gets-carried-away" class="slide level2">
+<h2>Before anyone gets carried away…</h2>
+<p>From nflarrests.com:</p>
+<blockquote>
+<p>Keep in mind there are 1700 NFL Players and their arrest rates are lower than the USA arrest rate.</p>
+</blockquote>
+<p>Also: arrest != conviction</p>
+</section><section id="what-i-tried-to-measure" class="slide level2">
+<h2>What I tried to measure</h2>
+<p>I tried to measure whether a player would get a second arrest.</p>
+<ul>
+<li>Rate of 1st arrest requires player statistics for each season, which means a second source.</li>
+<li>I’m lazy. Let’s check rate of second arrest.</li>
+</ul>
+</section><section id="just-the-basic-facts" class="slide level2">
+<h2>Just the basic facts</h2>
+<ul>
+<li>Number of players who’ve been arrested: 673</li>
+<li>Number of players w/more than one arrest: 146</li>
+<li>Probability of second arrest: 21.7%</li>
+</ul>
+<p>So there is a small probability of having more than one arrest. Compare this to Bailey/Simon probability of second accident.</p>
+</section></section>
+<section><section id="categorical-vs-continuous-data" class="titleslide slide level1"><h1>Categorical vs continuous data</h1></section><section id="there-are-only-2-kinds-of-data" class="slide level2">
+<h2>There are only 2 kinds of data</h2>
+<ul>
+<li>Continuous</li>
+<li>Categorical
+<ul>
+<li>Ordinal</li>
+<li>Unordered</li>
+</ul></li>
+<li>OK, three would be a mixed distribution (zero-inflated, etc.)</li>
+</ul>
+<p>Outcomes (for supervised learning) are either categorical or continuous (classification or regression).</p>
+</section><section id="categorical-data" class="slide level2">
+<h2>Categorical data</h2>
+<ul>
+<li>Gender</li>
+<li>Smoking</li>
+<li>Safe driver program</li>
+<li>Drug testing policy</li>
+<li>…</li>
+</ul>
+<p>Basically anything to which you could apply a schedule mod. And also:</p>
+<ul>
+<li>Class code</li>
+<li>Territory</li>
+<li>Zip code</li>
+</ul>
+<p>And those are just the ones that might be in a rating manual.</p>
+</section><section id="continuous-outcome" class="slide level2">
+<h2>Continuous outcome</h2>
+<div class="left">
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">sims &lt;-<span class="st"> </span><span class="fl">1e3</span>
+tbl_linear &lt;-<span class="st"> </span><span class="kw">tibble</span>(
+    <span class="dt">x =</span> <span class="kw">runif</span>(sims, <span class="dv">0</span>, <span class="dv">10</span>)
+  , <span class="dt">e =</span> <span class="kw">rnorm</span>(sims, <span class="dt">sd =</span> <span class="dv">5</span>)
+) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">mutate</span>(
+    <span class="dt">y =</span> <span class="fl">1.5</span> <span class="op">+</span><span class="st"> </span><span class="dv">2</span> <span class="op">*</span><span class="st"> </span>x <span class="op">+</span><span class="st"> </span>e
+  )</code></pre></div>
+</div>
+<div class="right">
+<p><img src="index_files/figure-revealjs/unnamed-chunk-4-1.png" width="768" /></p>
+</div>
+</section><section id="categorical-outcome" class="slide level2">
+<h2>Categorical outcome</h2>
+<ul>
+<li>Logistic regression</li>
+<li>Support vector machine</li>
+<li>Tree methods</li>
+</ul>
+</section><section id="categorical-outcome-1" class="slide level2">
+<h2>Categorical outcome</h2>
+<div class="left">
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">tbl_logistic &lt;-<span class="st"> </span>tbl_linear <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">mutate</span>(
+      <span class="dt">e =</span> <span class="kw">rlogis</span>(<span class="fl">1e3</span>)
+    , <span class="dt">latent =</span> <span class="fl">-7.5</span> <span class="op">+</span><span class="st"> </span><span class="dv">2</span> <span class="op">*</span><span class="st"> </span>x <span class="op">+</span><span class="st"> </span>e
+    , <span class="dt">y =</span> <span class="kw">as.integer</span>(latent <span class="op">&gt;</span><span class="st"> </span><span class="dv">0</span>)
+  )</code></pre></div>
+</div>
+<div class="right">
+<p><img src="index_files/figure-revealjs/unnamed-chunk-6-1.png" width="768" /></p>
+</div>
+</section><section id="categorical-predictors-in-a-linear-model" class="slide level2">
+<h2>Categorical predictors in a linear model</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">set.seed</span>(<span class="dv">1234</span>)
+tbl_one_cat &lt;-<span class="st"> </span><span class="cf">function</span>(<span class="dt">cat_label =</span> <span class="st">&#39;a&#39;</span>, <span class="dt">sims =</span> <span class="fl">1e3</span>) {
+  slope &lt;-<span class="st"> </span><span class="kw">rnorm</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">2</span>)
+  intercept &lt;-<span class="st"> </span><span class="kw">rnorm</span>(<span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">10</span>)
+  <span class="kw">tibble</span>(
+    <span class="dt">x =</span> <span class="kw">runif</span>(sims, <span class="dv">0</span>, <span class="dv">10</span>)
+  , <span class="dt">e =</span> <span class="kw">rnorm</span>(sims, <span class="dt">sd =</span> <span class="dv">5</span>)
+  , <span class="dt">category =</span> <span class="kw">rep</span>(cat_label, sims)
+) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">mutate</span>(
+    <span class="dt">y =</span> intercept <span class="op">+</span><span class="st"> </span>slope <span class="op">*</span><span class="st"> </span>x <span class="op">+</span><span class="st"> </span>e
+  )
+}
+
+tbl_cat &lt;-<span class="st"> </span><span class="kw">map_dfr</span>(letters[<span class="dv">1</span><span class="op">:</span><span class="dv">5</span>], tbl_one_cat)</code></pre></div>
+</section><section id="different-intercepts" class="slide level2">
+<h2>Different intercepts</h2>
+<p><img src="index_files/figure-revealjs/unnamed-chunk-8-1.png" width="768" /></p>
+</section><section id="different-slopes" class="slide level2">
+<h2>Different slopes</h2>
+<p><img src="index_files/figure-revealjs/unnamed-chunk-9-1.png" width="768" /></p>
+</section><section id="or-both" class="slide level2">
+<h2>Or both</h2>
+<p><img src="index_files/figure-revealjs/unnamed-chunk-10-1.png" width="768" /></p>
+</section><section id="issues" class="slide level2">
+<h2>Issues</h2>
+<ul>
+<li>Grouped data is looped data</li>
+<li>Handle this with credibility/hierarchical models</li>
+<li>What if we <em>only</em> have categorical predictors?</li>
+</ul>
+</section><section id="the-design-matrix" class="slide level2">
+<h2>The design matrix</h2>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;">categorya</th>
+<th style="text-align: right;">categoryb</th>
+<th style="text-align: right;">categoryc</th>
+<th style="text-align: right;">categoryd</th>
+<th style="text-align: right;">categorye</th>
+<th style="text-align: right;">categorya:x</th>
+<th style="text-align: right;">categoryb:x</th>
+<th style="text-align: right;">categoryc:x</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">8.6091538</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">6.4031061</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0949576</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">2.3255051</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">6.6608376</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">5.1425114</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">6.9359129</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">5.4497484</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">2.8273358</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">9.2343348</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+</tr>
+</tbody>
+</table>
+</section><section id="section" class="slide level2">
+<h2></h2>
+<p>Let’s try some non-linear methods</p>
+</section></section>
+<section><section id="naive-bayes" class="titleslide slide level1"><h1>Naive Bayes</h1></section><section id="bayes" class="slide level2">
+<h2>Bayes</h2>
+<p><span class="math display">\[Pr(Y=y|X=x)=\frac{Pr(Y = y) * Pr(X=x|Y=y)}{Pr(X=x)}\]</span></p>
+</section><section id="fit" class="slide level2">
+<h2>Fit</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(naivebayes)
+
+fit_nb &lt;-<span class="st"> </span><span class="kw">naive_bayes</span>(
+    <span class="dt">formula =</span> MultiArrest <span class="op">~</span><span class="st"> </span>PositionType
+  , <span class="dt">data =</span> tbl_players
+)</code></pre></div>
+<pre><code>## ===================== Naive Bayes ===================== 
+## Call: 
+## naive_bayes.formula(formula = MultiArrest ~ PositionType, data = tbl_players)
+## 
+## A priori probabilities: 
+## 
+##     FALSE      TRUE 
+## 0.7830609 0.2169391 
+## 
+## Tables: 
+##             
+## PositionType       FALSE        TRUE
+##            D 0.529411765 0.541095890
+##            O 0.462998102 0.424657534
+##            S 0.007590133 0.034246575</code></pre>
+</section><section id="can-we-work-that-out-manually" class="slide level2">
+<h2>Can we work that out manually?</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">prior_y &lt;-<span class="st"> </span><span class="kw">sum</span>(tbl_players<span class="op">$</span>MultiArrest) <span class="op">/</span><span class="st"> </span><span class="kw">nrow</span>(tbl_players)
+prob_x &lt;-<span class="st"> </span><span class="kw">sum</span>(tbl_players<span class="op">$</span>PositionType <span class="op">==</span><span class="st"> &#39;D&#39;</span>) <span class="op">/</span><span class="st"> </span><span class="kw">nrow</span>(tbl_players)
+tbl_cond &lt;-<span class="st"> </span>tbl_players <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">filter</span>(MultiArrest)
+prob_x_cond &lt;-<span class="st"> </span><span class="kw">sum</span>(tbl_cond<span class="op">$</span>PositionType <span class="op">==</span><span class="st"> &#39;D&#39;</span>) <span class="op">/</span><span class="st"> </span><span class="kw">nrow</span>(tbl_cond)
+prior_y <span class="op">*</span><span class="st"> </span>prob_x_cond <span class="op">/</span><span class="st"> </span>prob_x
+## [1] 0.2206704
+<span class="kw">predict</span>(fit_nb, <span class="dt">type =</span> <span class="st">&#39;prob&#39;</span>)[<span class="dv">1</span>, <span class="st">&#39;TRUE&#39;</span>]
+##      TRUE 
+## 0.2206704
+
+prior_y
+## [1] 0.2169391</code></pre></div>
+</section><section id="two-categories" class="slide level2">
+<h2>Two categories</h2>
+<p>One:</p>
+<p><span class="math display">\[Pr(Y=y|X=x)=\frac{Pr(Y = y) * Pr(X=x|Y=y)}{Pr(X=x)}\]</span></p>
+<p>Two:</p>
+<p><span class="math display">\[Pr(Y=y|X=x, Z=z)\]</span></p>
+<p><span class="math display">\[=\frac{Pr(Y = y) * Pr(X=x|Y=y) * Pr(Z=z|Y=y)}{Pr(X=x) * Pr(Z=z)}\]</span></p>
+</section><section id="how-about-a-lot-of-categories" class="slide level2">
+<h2>How about a lot of categories?</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">fit_nb &lt;-<span class="st"> </span><span class="kw">naive_bayes</span>(
+    <span class="dt">formula =</span> MultiArrest <span class="op">~</span><span class="st"> </span>TeamAbbr <span class="op">+</span><span class="st"> </span>Conference <span class="op">+</span><span class="st"> </span>Division <span class="op">+</span><span class="st"> </span>Position 
+        <span class="op">+</span><span class="st"> </span>PositionType <span class="op">+</span><span class="st"> </span>Encounter <span class="op">+</span><span class="st"> </span>CrimeCategory <span class="op">+</span><span class="st"> </span>ArrestSeasonState 
+    <span class="op">+</span><span class="st"> </span>DayOfWeek
+  , <span class="dt">data =</span> tbl_players
+)</code></pre></div>
+</section><section id="how-do-our-players-look" class="slide level2">
+<h2>How do our players look?</h2>
+<p><img src="index_files/figure-revealjs/unnamed-chunk-16-1.png" width="768" /></p>
+</section><section id="naive-bayes-1" class="slide level2">
+<h2>Naive Bayes</h2>
+<ul>
+<li>Often used in text processing</li>
+<li>Great for a sparse matrix</li>
+<li>It is ‘naive’ because we assume independence between categories</li>
+</ul>
+</section></section>
+<section><section id="a-decision-tree" class="titleslide slide level1"><h1>A decision tree</h1></section><section id="characteristics-of-a-decision-tree" class="slide level2">
+<h2>Characteristics of a decision tree</h2>
+<ul>
+<li>Divides a sample into regions/subsets</li>
+<li>The ‘prediction’ is a function (usually the mean) of some value within each category</li>
+<li>Membership is assessed by computing some measure of fit. If a split improves the criteria, then it is made.</li>
+<li>Forward only, ‘greedy’</li>
+<li>Number of levels and other criteria control the size and shape of the tree</li>
+</ul>
+</section><section id="measures-of-fit" class="slide level2">
+<h2>Measures of fit</h2>
+<p>For regression:</p>
+<ul>
+<li>Construct regions which minimize residual sum of squares</li>
+</ul>
+<p>For classification:</p>
+<ul>
+<li>Construct regions which maximize homogeneity</li>
+</ul>
+</section><section id="linear-fit" class="slide level2">
+<h2>Linear fit</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(tree)
+fit_tree &lt;-<span class="st"> </span>tree<span class="op">::</span><span class="kw">tree</span>(<span class="dt">formula =</span> y <span class="op">~</span><span class="st"> </span>x, <span class="dt">data =</span> tbl_linear)
+<span class="kw">summary</span>(fit_tree)
+## 
+## Regression tree:
+## tree::tree(formula = y ~ x, data = tbl_linear)
+## Number of terminal nodes:  6 
+## Residual mean deviance:  23.37 = 23230 / 994 
+## Distribution of residuals:
+##      Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
+## -15.27000  -3.02700   0.03153   0.00000   3.31700  15.82000</code></pre></div>
+</section><section id="section-1" class="slide level2">
+<h2></h2>
+<p><img src="index_files/figure-revealjs/unnamed-chunk-18-1.png" width="768" /></p>
+</section><section id="categorical-fit" class="slide level2">
+<h2>Categorical fit</h2>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">a</th>
+<th style="text-align: left;">b</th>
+<th style="text-align: right;">output</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">red</td>
+<td style="text-align: left;">black</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">red</td>
+<td style="text-align: left;">white</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">red</td>
+<td style="text-align: left;">black</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">blue</td>
+<td style="text-align: left;">white</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">blue</td>
+<td style="text-align: left;">black</td>
+<td style="text-align: right;">0</td>
+</tr>
+</tbody>
+</table>
+</section><section id="two-measures-of-homogeneity" class="slide level2">
+<h2>Two measures of homogeneity</h2>
+<p><span class="math display">\[Gini = \sum{p*(1-p)}\]</span></p>
+<p><span class="math display">\[Entropy = -\sum{p*log(p)}\]</span></p>
+</section><section id="measure-total-entropy" class="slide level2">
+<h2>Measure total entropy</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">entropy &lt;-<span class="st"> </span><span class="cf">function</span>(y) {
+  tbl &lt;-<span class="st"> </span><span class="kw">tibble</span>(y) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">    </span><span class="kw">group_by</span>(y) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">    </span><span class="kw">summarise</span>(<span class="dt">prob =</span> <span class="kw">n</span>()) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">    </span><span class="kw">mutate</span>(
+        <span class="dt">prob =</span> prob <span class="op">/</span><span class="st"> </span><span class="kw">sum</span>(prob)
+      , <span class="dt">ent =</span> <span class="op">-</span>prob <span class="op">*</span><span class="st"> </span><span class="kw">log</span>(prob))
+  
+  tbl<span class="op">$</span>ent <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">sum</span>()
+}</code></pre></div>
+</section><section id="measure-entropy-post-split" class="slide level2">
+<h2>Measure entropy post-split</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">entropy_post &lt;-<span class="st"> </span><span class="cf">function</span>(tbl, out_col, split_col) {
+  
+  split_col &lt;-<span class="st"> </span><span class="kw">enquo</span>(split_col)
+  out_col &lt;-<span class="st"> </span><span class="kw">enquo</span>(out_col)
+  
+  tbl <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">    </span><span class="kw">group_by</span>(<span class="op">!!</span><span class="st"> </span>split_col) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">    </span><span class="kw">summarise</span>(
+        <span class="dt">ent =</span> <span class="kw">entropy</span>(<span class="op">!!</span><span class="st"> </span>out_col)
+      , <span class="dt">group_pct =</span> <span class="kw">n</span>() <span class="op">/</span><span class="st"> </span><span class="kw">nrow</span>(tbl)
+    ) <span class="op">%&gt;%</span>
+<span class="st">    </span><span class="kw">ungroup</span>() <span class="op">%&gt;%</span>
+<span class="st">    </span><span class="kw">summarise</span>(
+      <span class="dt">ent_post =</span> <span class="kw">sum</span>(ent <span class="op">*</span><span class="st"> </span>group_pct)
+    ) <span class="op">%&gt;%</span>
+<span class="st">    </span><span class="kw">pull</span>(ent_post)
+}</code></pre></div>
+</section><section id="which-column-works-better-on-our-toy-data" class="slide level2">
+<h2>Which column works better on our toy data?</h2>
+<div class="left">
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">entropy</span>(tbl_toy<span class="op">$</span>output)
+## [1] 0.6730117
+
+tbl_toy <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">entropy_post</span>(output, a)
+## [1] 0.3819085
+
+tbl_toy <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">entropy_post</span>(output, b)
+## [1] 0.6591674</code></pre></div>
+</div>
+<div class="right">
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">
+a
+</th>
+<th style="text-align:left;">
+b
+</th>
+<th style="text-align:right;">
+output
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+red
+</td>
+<td style="text-align:left;">
+black
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+red
+</td>
+<td style="text-align:left;">
+white
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+red
+</td>
+<td style="text-align:left;">
+black
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+blue
+</td>
+<td style="text-align:left;">
+white
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+blue
+</td>
+<td style="text-align:left;">
+black
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section><section id="potential-node-splits" class="slide level2">
+<h2>Potential node splits</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">entropy</span>(tbl_players<span class="op">$</span>MultiArrestNum)
+## [1] 0.5230065
+tbl_players <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">entropy_post</span>(MultiArrestNum, PositionType)
+## [1] 0.5190857
+
+tbl_players <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">entropy_post</span>(MultiArrestNum, Season)
+## [1] 0.4943877
+
+tbl_players <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">entropy_post</span>(MultiArrestNum, ArrestSeasonState)
+## [1] 0.5218782</code></pre></div>
+</section><section id="what-splits" class="slide level2">
+<h2>What splits?</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(rpart)
+
+fit_tree &lt;-<span class="st"> </span><span class="kw">tree</span>(
+    <span class="dt">data =</span> tbl_players
+  , <span class="dt">formula =</span> MultiArrestFactor <span class="op">~</span><span class="st"> </span>PositionType <span class="op">+</span><span class="st"> </span>Season <span class="op">+</span><span class="st"> </span>ArrestSeasonState)
+
+<span class="kw">summary</span>(fit_tree)
+## 
+## Classification tree:
+## tree(formula = MultiArrestFactor ~ PositionType + Season + ArrestSeasonState, 
+##     data = tbl_players)
+## Variables actually used in tree construction:
+## [1] &quot;Season&quot;       &quot;PositionType&quot;
+## Number of terminal nodes:  4 
+## Residual mean deviance:  0.9865 = 659.9 / 669 
+## Misclassification error rate: 0.2125 = 143 / 673</code></pre></div>
+</section><section id="plot-the-tree" class="slide level2">
+<h2>Plot the tree</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">plot</span>(fit_tree)
+<span class="kw">text</span>(fit_tree, <span class="dt">pretty =</span> <span class="dv">0</span>)</code></pre></div>
+<p><img src="index_files/figure-revealjs/unnamed-chunk-26-1.png" width="768" /></p>
+</section><section id="note" class="slide level2">
+<h2>Note</h2>
+<ol type="1">
+<li>Full disclosure: I used both <code>rpart</code> and <code>tree</code> for the fit. For reasons that I’ve not yet debugged, <code>rpart</code> gave me no nodes.</li>
+<li>A package’s insistence on using factors may cause you to lose your mind.</li>
+</ol>
+</section><section id="baggingrandom-forests" class="slide level2">
+<h2>Bagging/random forests</h2>
+<ul>
+<li>Avoid overfit by bootstrapping</li>
+<li>Fit hundreds of resampled trees</li>
+<li>Take the average of results</li>
+<li>We don’t get that sweet tree plot</li>
+</ul>
+</section><section id="random-forest" class="slide level2">
+<h2>Random forest</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(randomForest)
+fit_forest &lt;-<span class="st"> </span><span class="kw">randomForest</span>(
+    <span class="dt">formula =</span> MultiArrestFactor <span class="op">~</span><span class="st"> </span>PositionType <span class="op">+</span><span class="st"> </span>Season <span class="op">+</span><span class="st"> </span>ArrestSeasonState
+  , <span class="dt">data =</span> tbl_players
+)</code></pre></div>
+</section><section id="variable-importance" class="slide level2">
+<h2>Variable importance</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">varImpPlot</span>(fit_forest)</code></pre></div>
+<p><img src="index_files/figure-revealjs/unnamed-chunk-28-1.png" width="768" /></p>
+</section></section>
+<section><section id="multiple-correspondence-analysis" class="titleslide slide level1"><h1>Multiple Correspondence Analysis</h1></section><section id="what-is-mca" class="slide level2">
+<h2>What is MCA?</h2>
+<ul>
+<li>PCA, but for categories</li>
+<li>CA, but for multiple variables</li>
+</ul>
+</section><section id="why-mca" class="slide level2">
+<h2>Why MCA?</h2>
+<ul>
+<li>Dimensionality reduction</li>
+<li>Could also consider (hierarchical) cluster analysis</li>
+<li>Others?</li>
+</ul>
+</section><section id="how-does-it-work" class="slide level2">
+<h2>How does it work?</h2>
+<ul>
+<li>Candidly, I can’t easily explain it.</li>
+<li>Creates a “complete disjunctive table”, i.e. a “one hot encoding” table</li>
+<li>This creates points in a high-dimensional space</li>
+<li>Synthesizes new dimensions which capture the most variance between the points</li>
+</ul>
+</section><section id="complete-disjunctive-table" class="slide level2">
+<h2>Complete disjunctive table</h2>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;">id</th>
+<th style="text-align: left;">metro</th>
+<th style="text-align: left;">region</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">urban</td>
+<td style="text-align: left;">north</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2</td>
+<td style="text-align: left;">urban</td>
+<td style="text-align: left;">south</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">3</td>
+<td style="text-align: left;">rural</td>
+<td style="text-align: left;">east</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">4</td>
+<td style="text-align: left;">urban</td>
+<td style="text-align: left;">north</td>
+</tr>
+</tbody>
+</table>
+</section><section id="cdt-or-one-hot-encoding" class="slide level2">
+<h2>CDT, or “one-hot encoding”</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">tbl_toy_mca_one_hot &lt;-<span class="st"> </span>tbl_toy_mca <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">gather</span>(category, value, <span class="op">-</span>id) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">unite</span>(cdt, <span class="op">-</span>id) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">mutate</span>(<span class="dt">count =</span> 1L) <span class="op">%&gt;%</span>
+<span class="st">  </span>tidyr<span class="op">::</span><span class="kw">spread</span>(cdt, count, <span class="dt">fill =</span> 0L)
+
+tbl_toy_mca_one_hot <span class="op">%&gt;%</span><span class="st"> </span>knitr<span class="op">::</span><span class="kw">kable</span>()</code></pre></div>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: right;">id</th>
+<th style="text-align: right;">metro_rural</th>
+<th style="text-align: right;">metro_urban</th>
+<th style="text-align: right;">region_east</th>
+<th style="text-align: right;">region_north</th>
+<th style="text-align: right;">region_south</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+</tr>
+</tbody>
+</table>
+<!-- ## Two categories = Five dimensions -->
+<!-- ```{r} -->
+<!-- tbl_toy_mca_one_hot %>% knitr::kable() -->
+<!-- ``` -->
+</section><section id="extract-data-for-processing" class="slide level2">
+<h2>Extract data for processing</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">tbl_cats &lt;-<span class="st"> </span>tbl_players <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">ungroup</span>() <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">select</span>(
+      CrimeCategory, ArrestSeasonState, Conference
+    , Division, DayOfWeek, Outcome, Position, PositionType
+    , Season) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">mutate_if</span>(is.character, as.factor)
+
+<span class="kw">library</span>(FactoMineR)
+fit_mca &lt;-<span class="st"> </span><span class="kw">MCA</span>(tbl_cats, <span class="dt">graph =</span> <span class="ot">FALSE</span>)</code></pre></div>
+</section><section id="visualize-in-the-reduced-dimensions" class="slide level2">
+<h2>Visualize in the reduced dimensions</h2>
+<p><img src="index_files/figure-revealjs/unnamed-chunk-32-1.png" width="768" /></p>
+</section><section id="mca-categorical---continuous" class="slide level2">
+<h2>MCA: categorical -&gt; continuous</h2>
+<p>Call: glm(formula = MultiArrestNum ~ 0 + dim_1 + dim_2, family = binomial(), data = tbl_players)</p>
+<p>Deviance Residuals: Min 1Q Median 3Q Max<br />
+-1.874 -1.180 -1.159 -1.134 1.233</p>
+<p>Coefficients: Estimate Std. Error z value Pr(&gt;|z|)<br />
+dim_1 0.29050 0.16491 1.762 0.0781 . dim_2 0.05891 0.13700 0.430 0.6672<br />
+— Signif. codes: 0 ‘<em><strong>’ 0.001 ’</strong>’ 0.01 ’</em>’ 0.05 ‘.’ 0.1 ‘’ 1</p>
+<p>(Dispersion parameter for binomial family taken to be 1)</p>
+<pre><code>Null deviance: 932.98  on 673  degrees of freedom</code></pre>
+<p>Residual deviance: 928.92 on 671 degrees of freedom AIC: 932.92</p>
+<p>Number of Fisher Scoring iterations: 3</p>
+</section></section>
+<section><section id="lets-model" class="titleslide slide level1"><h1>Let’s model!</h1></section><section id="how-well-model" class="slide level2">
+<h2>How we’ll model</h2>
+<ol type="1">
+<li>Pick a performance measure</li>
+<li>Setup cross-validation</li>
+<li>Train some models</li>
+<li>Measure performance</li>
+</ol>
+</section><section id="our-performance-measure" class="slide level2">
+<h2>Our performance measure</h2>
+<p>Misclassification rate</p>
+<p>Other options:</p>
+<ul>
+<li>True positive rate</li>
+<li>False positive rate</li>
+<li>Other confusion matrix metrics</li>
+<li>Area under the curve (AUC): A number close to 1 is good</li>
+</ul>
+</section><section id="measures" class="slide level2">
+<h2>Measures</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">misclass &lt;-<span class="st"> </span><span class="cf">function</span>(tbl_test, fit_obj) {
+  tbl_test &lt;-<span class="st"> </span>tbl_test <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">    </span><span class="kw">mutate</span>(
+        <span class="dt">pred =</span> <span class="kw">predict</span>(fit_obj, <span class="dt">type =</span> <span class="st">&#39;class&#39;</span>, <span class="dt">newdata =</span> tbl_test)
+      , <span class="dt">misclass =</span> pred <span class="op">!=</span><span class="st"> </span>MultiArrestFactor
+    )
+  <span class="kw">sum</span>(tbl_test<span class="op">$</span>misclass) <span class="op">/</span><span class="st"> </span><span class="kw">nrow</span>(tbl_test)
+}</code></pre></div>
+</section><section id="n-fold-cross-validation" class="slide level2">
+<h2>N-fold cross validation</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(modelr)
+<span class="kw">set.seed</span>(<span class="dv">1234</span>)
+tbl_folds &lt;-<span class="st"> </span><span class="kw">crossv_kfold</span>(tbl_players, <span class="dt">k =</span> <span class="dv">10</span>)</code></pre></div>
+</section><section id="tbl_folds" class="slide level2">
+<h2><code>tbl_folds</code></h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">tbl_folds <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">head</span>()
+## # A tibble: 6 x 3
+##   train          test           .id  
+##   &lt;list&gt;         &lt;list&gt;         &lt;chr&gt;
+## 1 &lt;S3: resample&gt; &lt;S3: resample&gt; 01   
+## 2 &lt;S3: resample&gt; &lt;S3: resample&gt; 02   
+## 3 &lt;S3: resample&gt; &lt;S3: resample&gt; 03   
+## 4 &lt;S3: resample&gt; &lt;S3: resample&gt; 04   
+## 5 &lt;S3: resample&gt; &lt;S3: resample&gt; 05   
+## 6 &lt;S3: resample&gt; &lt;S3: resample&gt; 06</code></pre></div>
+</section><section id="whats-in-tbl_folds" class="slide level2">
+<h2>What’s in tbl_folds?</h2>
+<ul>
+<li>Each row in the tibble holds:</li>
+<li>a training <code>resample</code> object</li>
+<li>a test <code>resample</code> object</li>
+<li>an id</li>
+</ul>
+<p>A <code>resample</code> object is a list which contains a data frame and a vector of row indices.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">tbl_folds<span class="op">$</span>train[[<span class="dv">1</span>]] <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">class</span>()
+## [1] &quot;resample&quot;</code></pre></div>
+</section><section id="assess-one-fold" class="slide level2">
+<h2>Assess one fold</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">assess_fold &lt;-<span class="st"> </span><span class="cf">function</span>(obj_train, obj_test, method, the_formula) {
+  tbl_train &lt;-<span class="st"> </span>obj_train <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">as.data.frame</span>()
+  tbl_test &lt;-<span class="st"> </span>obj_test <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">as.data.frame</span>()
+  
+  fit &lt;-<span class="st"> </span><span class="kw">do.call</span>(
+      method
+    , <span class="dt">args =</span> <span class="kw">list</span>(<span class="dt">formula =</span> the_formula, <span class="dt">data =</span> tbl_train))
+  
+  <span class="kw">misclass</span>(tbl_test, fit)
+
+}
+
+one_fold_misclass &lt;-<span class="st"> </span><span class="kw">assess_fold</span>(
+    tbl_folds<span class="op">$</span>train[[<span class="dv">1</span>]]
+  , tbl_folds<span class="op">$</span>test[[<span class="dv">1</span>]]
+  , tree<span class="op">::</span>tree
+  , <span class="kw">as.formula</span>(<span class="st">&#39;MultiArrestFactor ~ PositionType + Season&#39;</span>))</code></pre></div>
+</section><section id="assess-all-folds" class="slide level2">
+<h2>Assess all folds</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">cross_validate &lt;-<span class="st"> </span><span class="cf">function</span>(formula, tbl_folds, method) {
+  <span class="kw">map2_dbl</span>(
+    tbl_folds<span class="op">$</span>train
+  , tbl_folds<span class="op">$</span>test
+  , assess_fold
+  , method
+  , formula
+  ) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">mean</span>()
+}
+
+misclasses &lt;-<span class="st"> </span><span class="kw">cross_validate</span>(
+    <span class="kw">as.formula</span>(<span class="st">&#39;MultiArrestFactor ~ PositionType + Season&#39;</span>)
+  , tbl_folds
+  , tree<span class="op">::</span>tree
+)
+
+misclasses &lt;-<span class="st"> </span><span class="kw">cross_validate</span>(
+    <span class="kw">as.formula</span>(<span class="st">&#39;MultiArrestFactor ~ PositionType + Season&#39;</span>)
+  , tbl_folds
+  , naive_bayes
+)</code></pre></div>
+</section><section id="make-formulas" class="slide level2">
+<h2>Make formulas</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">make_formula &lt;-<span class="st"> </span><span class="cf">function</span>(predictors, target, <span class="dt">intercept =</span> <span class="ot">TRUE</span>) {
+  str_predictors &lt;-<span class="st"> </span><span class="kw">paste</span>(predictors, <span class="dt">collapse =</span> <span class="st">&#39;+&#39;</span>)
+  <span class="cf">if</span> (intercept) {
+    str_formula &lt;-<span class="st"> </span><span class="kw">paste</span>(target, <span class="st">&#39;~ 1 + &#39;</span>)
+  } <span class="cf">else</span> {
+    str_formula &lt;-<span class="st"> </span><span class="kw">paste</span>(target, <span class="st">&#39;~&#39;</span>)
+  }
+  
+  str_formula &lt;-<span class="st"> </span><span class="kw">paste</span>(str_formula, str_predictors)
+  <span class="kw">as.formula</span>(str_formula)
+}</code></pre></div>
+</section><section id="a-few-formulas" class="slide level2">
+<h2>A few formulas</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">the_formulas &lt;-<span class="st"> </span><span class="kw">list</span>(
+      <span class="kw">c</span>(<span class="st">&#39;PositionType&#39;</span>, <span class="st">&#39;Season&#39;</span>)
+    , <span class="kw">c</span>(<span class="st">&#39;PositionType&#39;</span>, <span class="st">&#39;Season&#39;</span>, <span class="st">&#39;DayOfWeek&#39;</span>)
+    , <span class="kw">c</span>(<span class="st">&#39;PositionType&#39;</span>, <span class="st">&#39;Season&#39;</span>, <span class="st">&#39;DayOfWeek&#39;</span>)
+    , <span class="kw">c</span>(<span class="st">&#39;PositionType&#39;</span>, <span class="st">&#39;Season&#39;</span>, <span class="st">&#39;DayOfWeek&#39;</span>, <span class="st">&#39;Conference&#39;</span>)
+    , <span class="kw">c</span>(<span class="st">&#39;PositionType&#39;</span>, <span class="st">&#39;Season&#39;</span>, <span class="st">&#39;DayOfWeek&#39;</span>, <span class="st">&#39;Conference&#39;</span>, <span class="st">&#39;Division&#39;</span>)
+    , <span class="kw">c</span>(<span class="st">&#39;PositionType&#39;</span>, <span class="st">&#39;Season&#39;</span>, <span class="st">&#39;DayOfWeek&#39;</span>, <span class="st">&#39;Conference&#39;</span>, <span class="st">&#39;Division&#39;</span>, <span class="st">&#39;TeamCity&#39;</span>)
+  ) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">map</span>(make_formula, <span class="st">&#39;MultiArrestFactor&#39;</span>, <span class="dt">intercept =</span> <span class="ot">FALSE</span>) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">as.vector</span>()
+
+tbl_models &lt;-<span class="st"> </span><span class="kw">tibble</span>(
+  <span class="dt">formula =</span> the_formulas
+)</code></pre></div>
+</section><section id="our-models-tibble" class="slide level2">
+<h2>Our models tibble</h2>
+<table>
+<colgroup>
+<col style="width: 100%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">formula</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">MultiArrestFactor ~ PositionType + Season</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">MultiArrestFactor ~ PositionType + Season + DayOfWeek</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">MultiArrestFactor ~ PositionType + Season + DayOfWeek</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">MultiArrestFactor ~ PositionType + Season + DayOfWeek + Conference</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">MultiArrestFactor ~ PositionType + Season + DayOfWeek + Conference + Division</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">MultiArrestFactor ~ PositionType + Season + DayOfWeek + Conference + Division + TeamCity</td>
+</tr>
+</tbody>
+</table>
+</section><section id="assess-all-folds-all-formulas-all-models" class="slide level2">
+<h2>Assess all folds, all formulas, all models</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">tbl_models &lt;-<span class="st"> </span>tbl_models <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">mutate</span>(
+      <span class="dt">misclass_tree =</span> <span class="kw">map_dbl</span>(formula, cross_validate, tbl_folds, tree<span class="op">::</span>tree)
+    , <span class="dt">misclass_nb =</span> <span class="kw">map_dbl</span>(formula, cross_validate, tbl_folds, naive_bayes)
+  )</code></pre></div>
+</section><section id="section-2" class="slide level2">
+<h2></h2>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">formula</th>
+<th style="text-align: right;">misclass_tree</th>
+<th style="text-align: right;">misclass_nb</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">MultiArrestFactor ~ PositionType + Season</td>
+<td style="text-align: right;">0.2170544</td>
+<td style="text-align: right;">0.2185470</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">MultiArrestFactor ~ PositionType + Season + DayOfWeek</td>
+<td style="text-align: right;">0.2170544</td>
+<td style="text-align: right;">0.2200176</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">MultiArrestFactor ~ PositionType + Season + DayOfWeek</td>
+<td style="text-align: right;">0.2170544</td>
+<td style="text-align: right;">0.2200176</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">MultiArrestFactor ~ PositionType + Season + DayOfWeek + Conference</td>
+<td style="text-align: right;">0.2170544</td>
+<td style="text-align: right;">0.2200176</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">MultiArrestFactor ~ PositionType + Season + DayOfWeek + Conference + Division</td>
+<td style="text-align: right;">0.2170544</td>
+<td style="text-align: right;">0.2230026</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">MultiArrestFactor ~ PositionType + Season + DayOfWeek + Conference + Division + TeamCity</td>
+<td style="text-align: right;">0.2170544</td>
+<td style="text-align: right;">0.2423178</td>
+</tr>
+</tbody>
+</table>
+</section></section>
+<section><section id="conclusion" class="titleslide slide level1"><h1>Conclusion</h1></section><section id="what-did-we-learn-charlie-brown" class="slide level2">
+<h2>What did we learn Charlie Brown?</h2>
+<ul>
+<li>Categorical data is ubiquitous, but tricky to model</li>
+<li>Non-linear approaches like tree-based methods and Naive Bayes look at categorical differently</li>
+<li>MCA can address “curse of dimensionality” with categorical data</li>
+<li>Let’s all keep doing this! Fitting categorical data is hard. Research is light.</li>
+</ul>
+</section><section id="section-3" class="slide level2">
+<h2></h2>
+<p>Slides may be found here:</p>
+<p><a href="http://pirategrunt.com/sparsity_blues/#/" class="uri">http://pirategrunt.com/sparsity_blues/#/</a></p>
+<p>All of the code - even stuff you didn’t see - is on GitHub</p>
+<p><a href="https://github.com/pirategrunt" class="uri">https://github.com/pirategrunt</a></p>
+</section><section id="thank-you" class="slide level2">
+<h2>Thank you!</h2>
+</section><section id="qa" class="slide level2">
+<h2>Q&amp;A</h2>
+</section><section id="references" class="slide level2">
+<h2>References</h2>
+<ul>
+<li><a href="http://www.gastonsanchez.com/visually-enforced/how-to/2012/10/13/MCA-in-R/" class="uri">http://www.gastonsanchez.com/visually-enforced/how-to/2012/10/13/MCA-in-R/</a></li>
+<li><a href="http://rpubs.com/dgrtwo/cv-modelr" class="uri">http://rpubs.com/dgrtwo/cv-modelr</a></li>
+<li><a href="https://drsimonj.svbtle.com/k-fold-cross-validation-with-modelr-and-broom" class="uri">https://drsimonj.svbtle.com/k-fold-cross-validation-with-modelr-and-broom</a></li>
+<li><a href="http://www.casact.org/pubs/forum/09wforum/flynn_francis.pdf" class="uri">http://www.casact.org/pubs/forum/09wforum/flynn_francis.pdf</a></li>
+</ul>
+<!-- # Back to our data -->
+<!-- ##  -->
+<!-- Categorical data: -->
+<!-- * Position -> offense/defense/special teams -->
+<!-- * Team -> AFC/NFC -->
+<!-- * City -->
+<!-- Continuous: -->
+<!-- * Player stats -->
+<!-- * Player physical characteristics -->
+<!-- * Player salary -->
+<!-- ```{r} -->
+<!-- summarize_category <- function(tbl, category){ -->
+<!--   tbl <- tbl[, c('MultiArrestNum', category)] -->
+<!--   names(tbl)[2] <- 'Category' -->
+<!--   tbl <- tbl %>% -->
+<!--     group_by(Category) %>%  -->
+<!--     summarize( -->
+<!--       MultiArrest = sum(MultiArrestNum, na.rm = TRUE) -->
+<!--       , N = n() -->
+<!--       ) %>% -->
+<!--     mutate(MultiArrestPct = MultiArrest / N) -->
+<!--   tbl -->
+<!-- } -->
+<!-- mojo <- summarize_category(tbl_players, 'ArrestSeasonState') -->
+<!-- tbl_players %>%  -->
+<!--   select() -->
+<!-- ``` -->
+<!-- ## -->
+<!-- ```{r} -->
+<!-- library(ROCR) -->
+<!-- actuals <- c(1, 0, 1, 0, 1) -->
+<!-- all_wrong <- ifelse(!actuals, 1, 0) -->
+<!-- all_right <- actuals -->
+<!-- some_right <- c(1, 1, 1, 0, 0) -->
+<!-- pred <- prediction(all_right, actuals) -->
+<!-- perf <- performance(pred, measure = "tpr", x.measure = "fpr")  -->
+<!-- plot(perf, col = rainbow(10)) -->
+<!-- ``` -->
+<!-- ## -->
+<!-- ```{r} -->
+<!-- pred <- prediction(all_wrong, actuals) -->
+<!-- perf <- performance(pred, measure = "tpr", x.measure = "fpr")  -->
+<!-- plot(perf, col = rainbow(10)) -->
+<!-- ``` -->
+<!-- ## -->
+<!-- ```{r} -->
+<!-- pred <- prediction(some_right, actuals) -->
+<!-- perf <- performance(pred, measure = "tpr", x.measure = "fpr")  -->
+<!-- plot(perf, col = rainbow(10)) -->
+<!-- ``` -->
+<!-- ## AUC Code -->
+<!-- ```{r} -->
+<!-- get_auc <- function(predict_val, actual_val){ -->
+<!--   pred <- prediction(predict_val, actual_val) -->
+<!--   perf <- performance(pred, 'auc') -->
+<!--   as.numeric(perf@y.values) -->
+<!-- } -->
+<!-- ``` -->
+</section></section>
+    </div>
+  </div>
+
+  <script src="index_files/reveal.js-3.3.0.1/lib/js/head.min.js"></script>
+  <script src="index_files/reveal.js-3.3.0.1/js/reveal.js"></script>
+
+  <script>
+
+      // Full list of configuration options available at:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+        // Push each slide change to the browser history
+        history: true,
+        // Vertical centering of slides
+        center: false,
+        // Transition style
+        transition: 'slide', // none/fade/slide/convex/concave/zoom
+        // Transition style for full page slide backgrounds
+        backgroundTransition: 'default', // none/fade/slide/convex/concave/zoom
+
+
+
+        // Optional reveal.js plugins
+        dependencies: [
+        ]
+      });
+    </script>
+  <!-- dynamically load mathjax for compatibility with self-contained -->
+  <script>
+    (function () {
+      var script = document.createElement("script");
+      script.type = "text/javascript";
+      script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+      document.getElementsByTagName("head")[0].appendChild(script);
+    })();
+  </script>
+
+<script>
+  (function() {
+    if (window.jQuery) {
+      Reveal.addEventListener( 'slidechanged', function(event) {  
+        window.jQuery(event.previousSlide).trigger('hidden');
+        window.jQuery(event.currentSlide).trigger('shown');
+      });
+    }
+  })();
+</script>
+
+
+  </body>
+</html>

@@ -12,4 +12,4 @@ data/%.rda:%.R
 
 clean:
 	rm -rf data/*.rda
-	rm pres.html
+	rm index.html
